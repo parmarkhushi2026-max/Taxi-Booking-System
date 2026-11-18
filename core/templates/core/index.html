@@ -1,27 +1,831 @@
 {% extends 'core/base.html' %}
 
-{% block title %}Taxi Booking System{% endblock %}
+{% block title %}CityRide &bull; Online Taxi Booking & Fleet Services{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Announcement Bar */
+    .top-bar {
+        background: linear-gradient(90deg, #1e293b, #0f172a);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        font-size: 0.82rem;
+        padding: 0.45rem 0;
+    }
+
+    /* Main Navigation */
+    .main-navbar {
+        background: rgba(11, 15, 25, 0.95);
+        backdrop-filter: blur(12px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        transition: all 0.3s;
+    }
+
+    .nav-link-custom {
+        color: #94a3b8 !important;
+        font-weight: 500;
+        font-size: 0.95rem;
+        padding: 0.5rem 1rem !important;
+        transition: color 0.2s;
+    }
+
+    .nav-link-custom:hover {
+        color: var(--taxi-yellow) !important;
+    }
+
+    /* Hero Section */
+    .hero-section {
+        position: relative;
+        padding: 5rem 0 6rem 0;
+        background: radial-gradient(circle at 85% 20%, rgba(245, 158, 11, 0.15) 0%, transparent 45%),
+                    radial-gradient(circle at 15% 80%, rgba(59, 130, 246, 0.08) 0%, transparent 45%),
+                    #0b0f19;
+        overflow: hidden;
+    }
+
+    .hero-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: rgba(245, 158, 11, 0.12);
+        border: 1px solid rgba(245, 158, 11, 0.3);
+        color: #f59e0b;
+        padding: 0.35rem 0.9rem;
+        border-radius: 50px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+    }
+
+    .hero-title {
+        font-size: 3.25rem;
+        font-weight: 800;
+        line-height: 1.15;
+        letter-spacing: -0.5px;
+    }
+
+    /* Booking Form Card */
+    .booking-card {
+        background: rgba(30, 41, 59, 0.92);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        padding: 2.25rem;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+    }
+
+    .form-control-booking {
+        background-color: #0f172a;
+        border: 1px solid #334155;
+        color: #f8fafc;
+        border-radius: 12px;
+        padding: 0.75rem 1rem 0.75rem 2.8rem;
+        font-size: 0.95rem;
+    }
+
+    .form-control-booking:focus {
+        background-color: #0f172a;
+        border-color: #f59e0b;
+        color: #f8fafc;
+        box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+    }
+
+    .input-icon-booking {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #94a3b8;
+        font-size: 1.1rem;
+        pointer-events: none;
+    }
+
+    .cab-select-pill {
+        cursor: pointer;
+        padding: 0.75rem 0.5rem;
+        border-radius: 12px;
+        border: 2px solid #334155;
+        background: #0f172a;
+        text-align: center;
+        transition: all 0.2s;
+    }
+
+    .cab-select-pill:hover {
+        border-color: #f59e0b;
+        transform: translateY(-2px);
+    }
+
+    .cab-select-pill.active {
+        border-color: #f59e0b;
+        background: rgba(245, 158, 11, 0.15);
+    }
+
+    /* Fleet Cards */
+    .fleet-card {
+        background: rgba(30, 41, 59, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 18px;
+        padding: 2rem 1.5rem;
+        transition: all 0.3s ease;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .fleet-card:hover {
+        transform: translateY(-6px);
+        border-color: rgba(245, 158, 11, 0.5);
+        box-shadow: 0 20px 35px -10px rgba(245, 158, 11, 0.2);
+    }
+
+    .fleet-icon {
+        width: 64px;
+        height: 64px;
+        border-radius: 16px;
+        background: rgba(245, 158, 11, 0.1);
+        color: #f59e0b;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        margin-bottom: 1.25rem;
+    }
+
+    /* Step Card */
+    .step-card {
+        background: rgba(30, 41, 59, 0.4);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 16px;
+        padding: 2rem;
+        position: relative;
+    }
+
+    .step-number {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        background: var(--taxi-yellow);
+        color: #0f172a;
+        font-weight: 800;
+        font-size: 1.1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1.25rem;
+    }
+
+    /* Testimonial Card */
+    .testimonial-card {
+        background: rgba(30, 41, 59, 0.5);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 16px;
+        padding: 1.75rem;
+    }
+
+    /* Footer */
+    .footer-section {
+        background-color: #070a11;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        padding: 4rem 0 2rem 0;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="d-flex align-items-center justify-content-center" style="min-height: 100vh;">
-    <div class="container text-center py-5">
-        <div class="card-custom p-5 mx-auto" style="max-width: 600px;">
-            <div class="d-inline-flex p-3 rounded-4 bg-taxi-yellow mb-4">
-                <i class="bi bi-taxi-front-fill fs-1 text-dark"></i>
-            </div>
-            <h1 class="fw-bold mb-2">Taxi Booking System</h1>
-            <p class="text-secondary mb-4">
-                Online taxi dispatch and booking management portal. Powered by Django and SQLite3.
-            </p>
-            <div class="d-flex justify-content-center gap-3">
-                <a href="{% url 'admin_login' %}" class="btn btn-taxi px-4 py-2">
-                    <i class="bi bi-shield-lock-fill me-1"></i> Admin Login
+<!-- Top Announcement -->
+<div class="top-bar text-secondary text-center">
+    <div class="container d-flex justify-content-between align-items-center">
+        <div>
+            <i class="bi bi-tag-fill text-warning me-1"></i>
+            <span>Flat <strong>20% OFF</strong> on all Airport Transfers today! Use coupon: <strong>TAXI20</strong></span>
+        </div>
+        <div class="d-none d-md-flex align-items-center gap-3">
+            <span><i class="bi bi-shield-check text-success me-1"></i> Verified Drivers</span>
+            <span><i class="bi bi-headset text-info me-1"></i> 24x7 Helpline: <strong>+91 98765 43210</strong></span>
+        </div>
+    </div>
+</div>
+
+<!-- Main Navbar -->
+<nav class="navbar navbar-expand-lg main-navbar sticky-top py-3">
+    <div class="container">
+        <!-- Logo -->
+        <a class="navbar-brand d-flex align-items-center text-white fw-bold fs-4" href="{% url 'index' %}">
+            <span class="bg-taxi-yellow p-2 rounded-3 me-2 d-inline-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                <i class="bi bi-taxi-front-fill fs-5 text-dark"></i>
+            </span>
+            Taxi Booking <span class="badge bg-warning text-dark ms-2 small" style="font-size: 0.65rem;">ONLINE</span>
+        </a>
+
+        <!-- Mobile Toggle -->
+        <button class="navbar-toggler border-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <!-- Nav Links -->
+        <div class="collapse navbar-collapse" id="navbarContent">
+            <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
+                <li class="nav-item"><a class="nav-link nav-link-custom" href="#bookRide">Book Cab</a></li>
+                <li class="nav-item"><a class="nav-link nav-link-custom" href="#fleet">Our Fleet</a></li>
+                <li class="nav-item"><a class="nav-link nav-link-custom" href="#howItWorks">How It Works</a></li>
+                <li class="nav-item"><a class="nav-link nav-link-custom" href="#whyUs">Why Us</a></li>
+                <li class="nav-item"><a class="nav-link nav-link-custom" href="#reviews">Reviews</a></li>
+            </ul>
+
+            <div class="d-flex align-items-center gap-2">
+                <a href="tel:+919876543210" class="btn btn-outline-secondary btn-sm d-none d-sm-inline-flex align-items-center">
+                    <i class="bi bi-telephone-fill me-1 text-warning"></i> Call Support
                 </a>
-                <a href="/admin/" class="btn btn-outline-secondary px-4 py-2" target="_blank">
-                    <i class="bi bi-gear-fill me-1"></i> Django Backend
+                <a href="{% url 'admin_login' %}" class="btn btn-taxi btn-sm px-3">
+                    <i class="bi bi-shield-lock-fill me-1"></i> Admin Login
                 </a>
             </div>
         </div>
     </div>
+</nav>
+
+<!-- Alert Messages -->
+{% if messages %}
+    <div class="container mt-3">
+        {% for message in messages %}
+            <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show py-3 px-4 small border-0 d-flex align-items-center shadow-lg" role="alert">
+                <i class="bi bi-check-circle-fill fs-5 text-success me-3"></i>
+                <div class="fs-6">{{ message }}</div>
+                <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+
+<!-- Hero Section with Booking Form -->
+<section class="hero-section" id="bookRide">
+    <div class="container">
+        <div class="row align-items-center g-5">
+            <!-- Left Headline Column -->
+            <div class="col-lg-6">
+                <div class="hero-badge">
+                    <i class="bi bi-lightning-charge-fill"></i> #1 Trusted Taxi Service in City
+                </div>
+                <h1 class="hero-title mb-3">
+                    Fast, Safe & <span class="text-taxi-yellow">Reliable Rides</span> at Your Doorstep.
+                </h1>
+                <p class="text-secondary fs-5 mb-4">
+                    Book point-to-point cabs, airport transfers, and outstation trips in seconds. Transparent upfront fares and zero cancellation penalties.
+                </p>
+
+                <!-- Quick Highlights -->
+                <div class="row g-3 mb-4">
+                    <div class="col-sm-4">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-stopwatch-fill fs-3 text-warning"></i>
+                            <div>
+                                <div class="fw-bold text-white">Under 5 Min</div>
+                                <div class="text-secondary small">Average Pickup</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-cash-coin fs-3 text-success"></i>
+                            <div>
+                                <div class="fw-bold text-white">Flat Fares</div>
+                                <div class="text-secondary small">No Surge Pricing</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-star-fill fs-3 text-warning"></i>
+                            <div>
+                                <div class="fw-bold text-white">4.9 / 5.0</div>
+                                <div class="text-secondary small">50,000+ Reviews</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Driver Contact Pill -->
+                <div class="d-flex align-items-center gap-3 p-3 rounded-4" style="background: rgba(30, 41, 59, 0.5); border: 1px solid #334155;">
+                    <div class="rounded-circle bg-warning text-dark p-2 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
+                        <i class="bi bi-person-fill-check fs-4"></i>
+                    </div>
+                    <div>
+                        <div class="fw-semibold text-white">Need an urgent ride right now?</div>
+                        <div class="text-secondary small">Call dispatch center 24x7 for instantaneous taxi allotment.</div>
+                    </div>
+                    <a href="tel:+919876543210" class="btn btn-sm btn-outline-warning ms-auto">Call 24/7</a>
+                </div>
+            </div>
+
+            <!-- Right Column: Interactive Ride Booking Card -->
+            <div class="col-lg-6">
+                <div class="booking-card">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h4 class="fw-bold text-white mb-0">
+                            <i class="bi bi-geo-alt-fill text-warning me-2"></i>Book a Cab
+                        </h4>
+                        <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 small">
+                            Instant Dispatch
+                        </span>
+                    </div>
+                    <p class="text-secondary small mb-4">Enter trip details below to get an instant cab assigned.</p>
+
+                    <form method="POST" action="{% url 'index' %}" id="bookingForm">
+                        {% csrf_token %}
+
+                        <!-- Passenger Info -->
+                        <div class="row g-2 mb-3">
+                            <div class="col-sm-6">
+                                <label class="form-label text-secondary small fw-semibold mb-1">Your Full Name</label>
+                                <div class="position-relative">
+                                    <i class="bi bi-person-fill input-icon-booking"></i>
+                                    <input type="text" name="customer_name" class="form-control form-control-booking w-100" placeholder="e.g. Rahul Sharma" required>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <label class="form-label text-secondary small fw-semibold mb-1">Mobile Number</label>
+                                <div class="position-relative">
+                                    <i class="bi bi-telephone-fill input-icon-booking"></i>
+                                    <input type="tel" name="customer_phone" class="form-control form-control-booking w-100" placeholder="e.g. 9876543210" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Pickup Location -->
+                        <div class="mb-3">
+                            <label class="form-label text-secondary small fw-semibold mb-1">Pickup Location</label>
+                            <div class="position-relative">
+                                <i class="bi bi-record-circle-fill text-success input-icon-booking"></i>
+                                <input type="text" name="pickup_location" id="pickupInput" class="form-control form-control-booking w-100" placeholder="Enter pickup address, hotel or airport" required>
+                            </div>
+                        </div>
+
+                        <!-- Drop-off Location -->
+                        <div class="mb-3">
+                            <label class="form-label text-secondary small fw-semibold mb-1">Drop-off Destination</label>
+                            <div class="position-relative">
+                                <i class="bi bi-geo-alt-fill text-danger input-icon-booking"></i>
+                                <input type="text" name="drop_location" id="dropInput" class="form-control form-control-booking w-100" placeholder="Enter destination address or station" required>
+                            </div>
+                        </div>
+
+                        <!-- Vehicle Type Selector -->
+                        <div class="mb-4">
+                            <label class="form-label text-secondary small fw-semibold mb-2">Choose Cab Type</label>
+                            <input type="hidden" name="vehicle_type" id="selectedVehicleType" value="Sedan">
+
+                            <div class="row g-2 text-white">
+                                <div class="col-3">
+                                    <div class="cab-select-pill" onclick="selectCab('Hatchback', 300, this)">
+                                        <i class="bi bi-car-front fs-4 text-warning"></i>
+                                        <div class="fw-bold small mt-1">Mini</div>
+                                        <div class="text-secondary" style="font-size: 0.72rem;">₹300</div>
+                                    </div>
+                                </div>
+                                <div class="col-3">
+                                    <div class="cab-select-pill active" onclick="selectCab('Sedan', 450, this)">
+                                        <i class="bi bi-car-front-fill fs-4 text-warning"></i>
+                                        <div class="fw-bold small mt-1">Sedan</div>
+                                        <div class="text-secondary" style="font-size: 0.72rem;">₹450</div>
+                                    </div>
+                                </div>
+                                <div class="col-3">
+                                    <div class="cab-select-pill" onclick="selectCab('SUV', 750, this)">
+                                        <i class="bi bi-truck-front-fill fs-4 text-warning"></i>
+                                        <div class="fw-bold small mt-1">SUV XL</div>
+                                        <div class="text-secondary" style="font-size: 0.72rem;">₹750</div>
+                                    </div>
+                                </div>
+                                <div class="col-3">
+                                    <div class="cab-select-pill" onclick="selectCab('Auto', 200, this)">
+                                        <i class="bi bi-bicycle fs-4 text-warning"></i>
+                                        <div class="fw-bold small mt-1">Auto</div>
+                                        <div class="text-secondary" style="font-size: 0.72rem;">₹200</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Fare Summary -->
+                        <div class="d-flex justify-content-between align-items-center p-3 rounded-3 mb-4" style="background: #0f172a; border: 1px dashed #334155;">
+                            <div>
+                                <div class="text-secondary small">Estimated Fixed Fare</div>
+                                <div class="text-muted" style="font-size: 0.75rem;">Includes GST & Toll taxes</div>
+                            </div>
+                            <div class="text-end">
+                                <span class="fs-3 fw-bold text-taxi-yellow" id="fareDisplay">₹450</span>
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <button type="submit" class="btn btn-taxi w-100 py-3 fs-6">
+                            <i class="bi bi-check2-circle me-1"></i> Confirm & Book Ride
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Vehicle Fleet Section -->
+<section class="py-5" id="fleet" style="background-color: #0f172a;">
+    <div class="container py-4">
+        <div class="text-center max-w-700 mx-auto mb-5">
+            <span class="badge bg-warning bg-opacity-10 text-warning px-3 py-2 rounded-pill fw-semibold mb-2">Our Modern Fleet</span>
+            <h2 class="fw-bold text-white">Choose the Perfect Cab for Every Ride</h2>
+            <p class="text-secondary">All vehicles are GPS-enabled, air-conditioned, and thoroughly sanitized before every trip.</p>
+        </div>
+
+        <div class="row g-4">
+            <!-- Hatchback -->
+            <div class="col-md-6 col-lg-3">
+                <div class="fleet-card">
+                    <div class="fleet-icon"><i class="bi bi-car-front"></i></div>
+                    <h4 class="fw-bold text-white mb-1">Economy Mini</h4>
+                    <p class="text-secondary small mb-3">Swift, WagonR, i10 &bull; Daily city commute</p>
+                    <div class="d-flex gap-2 mb-3">
+                        <span class="badge bg-dark border border-secondary text-secondary"><i class="bi bi-person me-1"></i>4 Seats</span>
+                        <span class="badge bg-dark border border-secondary text-secondary"><i class="bi bi-snow me-1"></i>AC</span>
+                        <span class="badge bg-dark border border-secondary text-secondary"><i class="bi bi-bag me-1"></i>2 Bags</span>
+                    </div>
+                    <div class="mt-auto pt-3 border-top border-secondary border-opacity-25 d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-secondary small">Fares from</div>
+                            <div class="fw-bold fs-5 text-taxi-yellow">₹12/km</div>
+                        </div>
+                        <a href="#bookRide" onclick="selectCab('Hatchback', 300, document.querySelectorAll('.cab-select-pill')[0])" class="btn btn-outline-warning btn-sm">Select</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sedan -->
+            <div class="col-md-6 col-lg-3">
+                <div class="fleet-card border-warning" style="border-width: 2px !important;">
+                    <div class="d-flex justify-content-between">
+                        <div class="fleet-icon"><i class="bi bi-car-front-fill"></i></div>
+                        <span class="badge bg-warning text-dark align-self-start fw-bold">MOST POPULAR</span>
+                    </div>
+                    <h4 class="fw-bold text-white mb-1">Comfort Sedan</h4>
+                    <p class="text-secondary small mb-3">Dzire, Etios, Amaze &bull; Extra legroom & comfort</p>
+                    <div class="d-flex gap-2 mb-3">
+                        <span class="badge bg-dark border border-secondary text-secondary"><i class="bi bi-person me-1"></i>4 Seats</span>
+                        <span class="badge bg-dark border border-secondary text-secondary"><i class="bi bi-snow me-1"></i>AC</span>
+                        <span class="badge bg-dark border border-secondary text-secondary"><i class="bi bi-bag me-1"></i>3 Bags</span>
+                    </div>
+                    <div class="mt-auto pt-3 border-top border-secondary border-opacity-25 d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-secondary small">Fares from</div>
+                            <div class="fw-bold fs-5 text-taxi-yellow">₹16/km</div>
+                        </div>
+                        <a href="#bookRide" onclick="selectCab('Sedan', 450, document.querySelectorAll('.cab-select-pill')[1])" class="btn btn-taxi btn-sm">Select</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SUV -->
+            <div class="col-md-6 col-lg-3">
+                <div class="fleet-card">
+                    <div class="fleet-icon"><i class="bi bi-truck-front-fill"></i></div>
+                    <h4 class="fw-bold text-white mb-1">Executive SUV</h4>
+                    <p class="text-secondary small mb-3">Innova, Ertiga, Scorpio &bull; Family & airport</p>
+                    <div class="d-flex gap-2 mb-3">
+                        <span class="badge bg-dark border border-secondary text-secondary"><i class="bi bi-person me-1"></i>6-7 Seats</span>
+                        <span class="badge bg-dark border border-secondary text-secondary"><i class="bi bi-snow me-1"></i>AC</span>
+                        <span class="badge bg-dark border border-secondary text-secondary"><i class="bi bi-bag me-1"></i>5 Bags</span>
+                    </div>
+                    <div class="mt-auto pt-3 border-top border-secondary border-opacity-25 d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-secondary small">Fares from</div>
+                            <div class="fw-bold fs-5 text-taxi-yellow">₹22/km</div>
+                        </div>
+                        <a href="#bookRide" onclick="selectCab('SUV', 750, document.querySelectorAll('.cab-select-pill')[2])" class="btn btn-outline-warning btn-sm">Select</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Auto -->
+            <div class="col-md-6 col-lg-3">
+                <div class="fleet-card">
+                    <div class="fleet-icon"><i class="bi bi-bicycle"></i></div>
+                    <h4 class="fw-bold text-white mb-1">Green CNG Auto</h4>
+                    <p class="text-secondary small mb-3">Eco-friendly &bull; Quick short-distance city rides</p>
+                    <div class="d-flex gap-2 mb-3">
+                        <span class="badge bg-dark border border-secondary text-secondary"><i class="bi bi-person me-1"></i>3 Seats</span>
+                        <span class="badge bg-dark border border-secondary text-secondary"><i class="bi bi-wind me-1"></i>Ventilated</span>
+                        <span class="badge bg-dark border border-secondary text-secondary"><i class="bi bi-bag me-1"></i>1 Bag</span>
+                    </div>
+                    <div class="mt-auto pt-3 border-top border-secondary border-opacity-25 d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-secondary small">Fares from</div>
+                            <div class="fw-bold fs-5 text-taxi-yellow">₹9/km</div>
+                        </div>
+                        <a href="#bookRide" onclick="selectCab('Auto', 200, document.querySelectorAll('.cab-select-pill')[3])" class="btn btn-outline-warning btn-sm">Select</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- How It Works Section -->
+<section class="py-5" id="howItWorks">
+    <div class="container py-4">
+        <div class="text-center mb-5">
+            <span class="badge bg-warning bg-opacity-10 text-warning px-3 py-2 rounded-pill fw-semibold mb-2">Simple 3-Step Process</span>
+            <h2 class="fw-bold text-white">How to Book Your Cab</h2>
+            <p class="text-secondary">Get a cab at your doorstep in three easy steps.</p>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="step-card h-100">
+                    <div class="step-number">1</div>
+                    <h5 class="fw-bold text-white mb-2">Enter Pickup & Drop</h5>
+                    <p class="text-secondary small mb-0">Fill in your pickup location and destination. Our smart routing calculates exact distance and optimal path.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="step-card h-100">
+                    <div class="step-number">2</div>
+                    <h5 class="fw-bold text-white mb-2">Select Your Cab</h5>
+                    <p class="text-secondary small mb-0">Choose between budget Mini, comfortable Sedan, or spacious SUV XL. View upfront pricing without hidden charges.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="step-card h-100">
+                    <div class="step-number">3</div>
+                    <h5 class="fw-bold text-white mb-2">Enjoy Your Ride</h5>
+                    <p class="text-secondary small mb-0">Driver arrives within 5 minutes. Enjoy air-conditioned comfort, real-time GPS tracking, and cashless pay options.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Why Choose Us -->
+<section class="py-5" id="whyUs" style="background-color: #0f172a;">
+    <div class="container py-4">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-6">
+                <span class="badge bg-warning bg-opacity-10 text-warning px-3 py-2 rounded-pill fw-semibold mb-2">Why Choose Us</span>
+                <h2 class="fw-bold text-white mb-4">We Go the Extra Mile for Your Safety & Comfort</h2>
+                
+                <div class="d-flex flex-column gap-4">
+                    <div class="d-flex gap-3">
+                        <div class="rounded-3 bg-warning text-dark p-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; flex-shrink: 0;">
+                            <i class="bi bi-shield-lock-fill fs-4"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold text-white mb-1">100% Background Checked Chauffeurs</h5>
+                            <p class="text-secondary small mb-0">Every driver undergoes police verification, driving history audits, and background checks before onboarding.</p>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-3">
+                        <div class="rounded-3 bg-warning text-dark p-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; flex-shrink: 0;">
+                            <i class="bi bi-clock-history fs-4"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold text-white mb-1">On-Time Guarantee</h5>
+                            <p class="text-secondary small mb-0">We value your time. If your airport cab is delayed by more than 10 minutes, your next ride is on us.</p>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-3">
+                        <div class="rounded-3 bg-warning text-dark p-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; flex-shrink: 0;">
+                            <i class="bi bi-currency-rupee fs-4"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold text-white mb-1">Transparent Flat Rates</h5>
+                            <p class="text-secondary small mb-0">Zero surge pricing during rains or peak rush hours. What you see on screen is what you pay.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="card-custom p-4 text-center">
+                    <div class="p-4 rounded-4" style="background: radial-gradient(circle, rgba(245, 158, 11, 0.2) 0%, rgba(15, 23, 42, 0.9) 70%);">
+                        <i class="bi bi-taxi-front-fill text-taxi-yellow" style="font-size: 7rem;"></i>
+                        <h3 class="fw-bold text-white mt-3">24x7 Ready Fleet</h3>
+                        <p class="text-secondary small">Over 500+ commercial vehicles ready across all major transit hubs & stations.</p>
+                        <a href="#bookRide" class="btn btn-taxi px-4 py-2 mt-2">Book Your Cab Now</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Customer Reviews -->
+<section class="py-5" id="reviews">
+    <div class="container py-4">
+        <div class="text-center mb-5">
+            <span class="badge bg-warning bg-opacity-10 text-warning px-3 py-2 rounded-pill fw-semibold mb-2">Verified Rider Reviews</span>
+            <h2 class="fw-bold text-white">Loved by Thousands of Commuters</h2>
+            <p class="text-secondary">Real feedback from regular travelers, airport passengers, and corporate commuters.</p>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="testimonial-card h-100">
+                    <div class="text-warning mb-2">
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                    </div>
+                    <p class="text-light small mb-3">"Booked an early morning 4:00 AM cab for Terminal 3 airport transfer. Driver arrived 10 minutes prior, car was spotless and clean. Seamless experience!"</p>
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="rounded-circle bg-secondary text-white fw-bold d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">AK</div>
+                        <div>
+                            <div class="fw-semibold text-white small">Aditya Kapoor</div>
+                            <div class="text-secondary" style="font-size: 0.75rem;">Airport Transfer &bull; Delhi</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="testimonial-card h-100">
+                    <div class="text-warning mb-2">
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                    </div>
+                    <p class="text-light small mb-3">"The flat pricing is the best part! Other apps charge 2x during evening peak hours, but here the fare was completely fair and transparent."</p>
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="rounded-circle bg-warning text-dark fw-bold d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">SM</div>
+                        <div>
+                            <div class="fw-semibold text-white small">Sneha Mukherjee</div>
+                            <div class="text-secondary" style="font-size: 0.75rem;">Daily Commute &bull; Gurugram</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="testimonial-card h-100">
+                    <div class="text-warning mb-2">
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                    </div>
+                    <p class="text-light small mb-3">"We booked an Innova SUV for our 6-member family trip. Driver was extremely polite and drove safely throughout the highway. Highly recommended!"</p>
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="rounded-circle bg-primary text-white fw-bold d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">RS</div>
+                        <div>
+                            <div class="fw-semibold text-white small">Rameshwar Sharma</div>
+                            <div class="text-secondary" style="font-size: 0.75rem;">Outstation Trip &bull; Noida</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer class="footer-section">
+    <div class="container">
+        <div class="row g-4 mb-4">
+            <div class="col-lg-4">
+                <div class="d-flex align-items-center text-white fw-bold fs-4 mb-3">
+                    <span class="bg-taxi-yellow p-2 rounded-3 me-2 d-inline-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+                        <i class="bi bi-taxi-front-fill fs-5 text-dark"></i>
+                    </span>
+                    Taxi Booking System
+                </div>
+                <p class="text-secondary small mb-3">
+                    Reliable on-demand passenger cab service. Book rides online, manage commercial fleets, and track real-time bookings effortlessly.
+                </p>
+                <div class="d-flex gap-3 text-secondary fs-5">
+                    <a href="#" class="text-secondary"><i class="bi bi-facebook"></i></a>
+                    <a href="#" class="text-secondary"><i class="bi bi-twitter-x"></i></a>
+                    <a href="#" class="text-secondary"><i class="bi bi-instagram"></i></a>
+                    <a href="#" class="text-secondary"><i class="bi bi-linkedin"></i></a>
+                </div>
+            </div>
+
+            <div class="col-6 col-lg-2">
+                <h6 class="fw-bold text-white mb-3">Quick Links</h6>
+                <ul class="list-unstyled text-secondary small d-flex flex-column gap-2 mb-0">
+                    <li><a href="#bookRide" class="text-secondary text-decoration-none">Book Cab</a></li>
+                    <li><a href="#fleet" class="text-secondary text-decoration-none">Our Fleet</a></li>
+                    <li><a href="#howItWorks" class="text-secondary text-decoration-none">How It Works</a></li>
+                    <li><a href="#whyUs" class="text-secondary text-decoration-none">Why Choose Us</a></li>
+                    <li><a href="#reviews" class="text-secondary text-decoration-none">Customer Reviews</a></li>
+                </ul>
+            </div>
+
+            <div class="col-6 col-lg-3">
+                <h6 class="fw-bold text-white mb-3">Our Service Cities</h6>
+                <ul class="list-unstyled text-secondary small d-flex flex-column gap-2 mb-0">
+                    <li><i class="bi bi-geo-alt me-1 text-warning"></i> Delhi NCR &bull; Gurugram &bull; Noida</li>
+                    <li><i class="bi bi-geo-alt me-1 text-warning"></i> Mumbai &bull; Navi Mumbai &bull; Thane</li>
+                    <li><i class="bi bi-geo-alt me-1 text-warning"></i> Bengaluru &bull; Whitefield</li>
+                    <li><i class="bi bi-geo-alt me-1 text-warning"></i> Pune &bull; Hyderabad &bull; Jaipur</li>
+                </ul>
+            </div>
+
+            <div class="col-lg-3">
+                <h6 class="fw-bold text-white mb-3">Staff & Admin</h6>
+                <p class="text-secondary small mb-3">Authorized dispatchers and fleet administrators:</p>
+                <a href="{% url 'admin_login' %}" class="btn btn-outline-warning w-100 py-2 small fw-semibold">
+                    <i class="bi bi-shield-lock-fill me-1"></i> Admin Sign In Portal
+                </a>
+            </div>
+        </div>
+
+        <div class="pt-4 border-top border-secondary border-opacity-25 text-center text-secondary small">
+            &copy; 2026 Taxi Booking System &bull; All Rights Reserved. Built with Django & SQLite3.
+        </div>
+    </div>
+</footer>
+
+<!-- Booking Confirmation Modal (Shows when new_booking is present) -->
+{% if new_booking %}
+<div class="modal fade show" id="bookingSuccessModal" tabindex="-1" style="display: block; background: rgba(0,0,0,0.85);" aria-modal="true" role="dialog">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content card-custom text-white border-warning p-3">
+            <div class="modal-header border-0 pb-0">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="rounded-circle bg-success text-white p-2 d-inline-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                        <i class="bi bi-check-lg fs-5"></i>
+                    </span>
+                    <h5 class="modal-title fw-bold text-white">Ride Booked Successfully!</h5>
+                </div>
+                <button type="button" class="btn-close btn-close-white" onclick="closeModal()"></button>
+            </div>
+            <div class="modal-body py-4">
+                <div class="text-center mb-3">
+                    <div class="text-secondary small">Your Booking Reference ID</div>
+                    <div class="fs-2 fw-bold text-warning">{{ new_booking.booking_id }}</div>
+                    <span class="badge bg-success-subtle text-success px-3 py-1 rounded-pill mt-1">Confirmed & Dispatched</span>
+                </div>
+
+                <div class="p-3 rounded-3 mb-3" style="background: #0f172a; border: 1px solid #334155;">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-secondary small">Passenger:</span>
+                        <span class="fw-semibold small">{{ new_booking.customer_name }} ({{ new_booking.customer_phone }})</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-secondary small">Pickup:</span>
+                        <span class="fw-semibold small text-end">{{ new_booking.pickup_location }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-secondary small">Destination:</span>
+                        <span class="fw-semibold small text-end">{{ new_booking.drop_location }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-secondary small">Cab Type:</span>
+                        <span class="badge bg-secondary">{{ new_booking.vehicle_type }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between pt-2 border-top border-secondary">
+                        <span class="fw-bold">Estimated Fare:</span>
+                        <span class="fw-bold text-warning fs-5">₹{{ new_booking.fare }}</span>
+                    </div>
+                </div>
+
+                <div class="alert alert-info py-2 px-3 small border-0 mb-0 d-flex align-items-center">
+                    <i class="bi bi-info-circle-fill me-2 fs-5"></i>
+                    <span>Your driver is on the way. Live tracking details have been sent to your phone via SMS.</span>
+                </div>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-taxi w-100 py-2" onclick="closeModal()">
+                    Done &bull; Return to Home
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function selectCab(type, fare, element) {
+        document.getElementById('selectedVehicleType').value = type;
+        document.getElementById('fareDisplay').innerText = '₹' + fare;
+        
+        document.querySelectorAll('.cab-select-pill').forEach(function(pill) {
+            pill.classList.remove('active');
+        });
+        if (element) {
+            element.classList.add('active');
+        }
+    }
+
+    function closeModal() {
+        const modal = document.getElementById('bookingSuccessModal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
+    }
+</script>
 {% endblock %}

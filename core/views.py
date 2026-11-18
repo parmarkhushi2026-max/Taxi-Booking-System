@@ -1,3 +1,4 @@
+import random
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
@@ -9,8 +10,54 @@ from .models import Driver, Vehicle, Booking
 
 
 def index(request):
-    """Public home view."""
-    return render(request, 'core/index.html')
+    """
+    Public Homepage view for the Taxi Booking System.
+    Handles interactive quick ride booking and displays fleet information.
+    """
+    new_booking = None
+
+    if request.method == 'POST':
+        customer_name = request.POST.get('customer_name', '').strip()
+        customer_phone = request.POST.get('customer_phone', '').strip()
+        pickup_location = request.POST.get('pickup_location', '').strip()
+        drop_location = request.POST.get('drop_location', '').strip()
+        vehicle_type = request.POST.get('vehicle_type', 'Sedan').strip()
+
+        # Fares estimation mapping
+        fare_map = {
+            'Hatchback': 300.00,
+            'Sedan': 450.00,
+            'SUV': 750.00,
+            'Auto': 200.00,
+        }
+        fare = fare_map.get(vehicle_type, 450.00)
+
+        if customer_name and customer_phone and pickup_location and drop_location:
+            # Generate unique booking reference
+            booking_id = f"TX-{random.randint(1000, 9999)}"
+            while Booking.objects.filter(booking_id=booking_id).exists():
+                booking_id = f"TX-{random.randint(1000, 9999)}"
+
+            new_booking = Booking.objects.create(
+                booking_id=booking_id,
+                customer_name=customer_name,
+                customer_phone=customer_phone,
+                pickup_location=pickup_location,
+                drop_location=drop_location,
+                vehicle_type=vehicle_type,
+                fare=fare,
+                status='confirmed'
+            )
+            messages.success(
+                request,
+                f"🎉 Ride Booked Successfully! Your Booking ID is {booking_id}. A driver will arrive shortly."
+            )
+        else:
+            messages.error(request, "Please fill in all booking details (Name, Phone, Pickup & Drop).")
+
+    return render(request, 'core/index.html', {
+        'new_booking': new_booking,
+    })
 
 
 def admin_login_view(request):

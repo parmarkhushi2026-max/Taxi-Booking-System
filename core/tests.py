@@ -17,7 +17,6 @@ class AdminLoginTests(TestCase):
             email='user@taxi.com',
             password='UserPassword123'
         )
-        # Create sample data
         self.driver = Driver.objects.create(
             name='Test Driver',
             phone='9999988888',
@@ -34,6 +33,30 @@ class AdminLoginTests(TestCase):
             fare=500.00,
             status='completed'
         )
+
+    def test_homepage_renders_real_web_content(self):
+        """Verify the homepage renders like a real taxi booking website."""
+        response = self.client.get(reverse('index'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'core/index.html')
+        content = response.content.decode()
+        self.assertIn('Book a Cab', content)
+        self.assertIn('Our Modern Fleet', content)
+        self.assertIn('How to Book Your Cab', content)
+        self.assertIn('Why Choose Us', content)
+
+    def test_book_ride_from_homepage(self):
+        """Passenger can book a ride from the homepage and it saves to DB."""
+        response = self.client.post(reverse('index'), {
+            'customer_name': 'Vikas Patel',
+            'customer_phone': '9876500000',
+            'pickup_location': 'Airport Terminal 3',
+            'drop_location': 'Connaught Place',
+            'vehicle_type': 'Sedan',
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(Booking.objects.filter(customer_name='Vikas Patel').exists())
+        self.assertContains(response, 'Ride Booked Successfully!')
 
     def test_admin_login_page_renders_without_registration(self):
         """Verify the login page renders and explicitly contains NO registration links."""

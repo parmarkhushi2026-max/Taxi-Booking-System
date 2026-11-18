@@ -1,0 +1,209 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Admin Sign In &bull; Taxi Booking System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .login-container {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem 1rem;
+        background: radial-gradient(circle at 10% 20%, rgba(245, 158, 11, 0.12) 0%, transparent 40%),
+                    radial-gradient(circle at 90% 80%, rgba(59, 130, 246, 0.08) 0%, transparent 40%),
+                    #0b0f19;
+    }
+
+    .login-card {
+        width: 100%;
+        max-width: 440px;
+        padding: 2.5rem 2rem;
+        border-radius: 20px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.65);
+    }
+
+    .taxi-logo-badge {
+        width: 64px;
+        height: 64px;
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(245, 158, 11, 0.05));
+        border: 1px solid rgba(245, 158, 11, 0.35);
+        color: #f59e0b;
+        border-radius: 16px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .form-control-custom {
+        background-color: #0f172a;
+        border: 1px solid #334155;
+        color: #f8fafc;
+        border-radius: 10px;
+        padding: 0.75rem 1rem 0.75rem 2.75rem;
+        font-size: 0.95rem;
+        transition: all 0.2s ease;
+    }
+
+    .form-control-custom:focus {
+        background-color: #0f172a;
+        border-color: #f59e0b;
+        color: #f8fafc;
+        box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.15);
+    }
+
+    .input-icon {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #64748b;
+        font-size: 1.1rem;
+        pointer-events: none;
+        transition: color 0.2s;
+    }
+
+    .input-group-custom:focus-within .input-icon {
+        color: #f59e0b;
+    }
+
+    .toggle-password {
+        position: absolute;
+        right: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #64748b;
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0;
+        font-size: 1.1rem;
+    }
+
+    .toggle-password:hover {
+        color: #f59e0b;
+    }
+
+    .security-notice {
+        background: rgba(15, 23, 42, 0.6);
+        border: 1px dashed #334155;
+        border-radius: 10px;
+        padding: 0.75rem;
+        font-size: 0.8rem;
+        color: #94a3b8;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <div class="card-custom login-card">
+        <!-- Logo & Header -->
+        <div class="text-center">
+            <div class="taxi-logo-badge">
+                <i class="bi bi-taxi-front-fill"></i>
+            </div>
+            <h3 class="fw-bold text-white mb-1">Admin Portal</h3>
+            <p class="text-secondary small mb-4">Taxi Booking Management System</p>
+        </div>
+
+        <!-- Alert Messages -->
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show py-2 px-3 small border-0 d-flex align-items-center mb-3" role="alert">
+                    <i class="bi {% if message.tags == 'error' %}bi-exclamation-triangle-fill{% else %}bi-info-circle-fill{% endif %} me-2"></i>
+                    <div>{{ message }}</div>
+                    <button type="button" class="btn-close btn-close-white ms-auto p-2" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Login Form (NO REGISTRATION) -->
+        <form method="POST" action="{% url 'admin_login' %}">
+            {% csrf_token %}
+
+            <!-- Username -->
+            <div class="mb-3">
+                <label for="username" class="form-label small fw-semibold text-secondary mb-1">Admin Username</label>
+                <div class="position-relative input-group-custom">
+                    <i class="bi bi-person-badge-fill input-icon"></i>
+                    <input type="text" 
+                           class="form-control form-control-custom w-100" 
+                           id="username" 
+                           name="username" 
+                           placeholder="Enter admin username" 
+                           required 
+                           autofocus 
+                           autocomplete="username">
+                </div>
+            </div>
+
+            <!-- Password -->
+            <div class="mb-3">
+                <label for="password" class="form-label small fw-semibold text-secondary mb-1">Password</label>
+                <div class="position-relative input-group-custom">
+                    <i class="bi bi-shield-lock-fill input-icon"></i>
+                    <input type="password" 
+                           class="form-control form-control-custom w-100" 
+                           id="password" 
+                           name="password" 
+                           placeholder="Enter admin password" 
+                           required 
+                           autocomplete="current-password">
+                    <button type="button" class="toggle-password" id="togglePasswordBtn" title="Toggle password visibility">
+                        <i class="bi bi-eye" id="togglePasswordIcon"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Remember Me -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="remember_me" id="rememberMe">
+                    <label class="form-check-label small text-secondary" for="rememberMe">
+                        Keep me signed in
+                    </label>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="btn btn-taxi w-100 py-2 mb-3">
+                <i class="bi bi-box-arrow-in-right me-1"></i> Sign In to Admin Panel
+            </button>
+
+            <!-- Restricted Notice (Explicit No-Registration indicator) -->
+            <div class="security-notice text-center mt-3">
+                <i class="bi bi-lock-fill text-warning me-1"></i>
+                <span><strong>Manual Admin Access:</strong> Public registration is closed. Only authorized system administrators may log in.</span>
+            </div>
+        </form>
+
+        <!-- Back to Home Link -->
+        <div class="text-center mt-4">
+            <a href="{% url 'index' %}" class="text-decoration-none small text-secondary hover-white">
+                <i class="bi bi-arrow-left me-1"></i> Back to Homepage
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Password toggle functionality
+    const togglePasswordBtn = document.getElementById('togglePasswordBtn');
+    const passwordInput = document.getElementById('password');
+    const togglePasswordIcon = document.getElementById('togglePasswordIcon');
+
+    if (togglePasswordBtn) {
+        togglePasswordBtn.addEventListener('click', function () {
+            const isPassword = passwordInput.getAttribute('type') === 'password';
+            passwordInput.setAttribute('type', isPassword ? 'text' : 'password');
+            togglePasswordIcon.classList.toggle('bi-eye');
+            togglePasswordIcon.classList.toggle('bi-eye-slash');
+        });
+    }
+</script>
+{% endblock %}

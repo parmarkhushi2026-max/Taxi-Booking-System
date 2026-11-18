@@ -186,6 +186,221 @@
         border-top: 1px solid rgba(255, 255, 255, 0.08);
         padding: 4rem 0 2rem 0;
     }
+
+    /* ===================================================
+       ANIMATED TAXI HIGHWAY SYSTEM
+    =================================================== */
+    .taxi-animation-banner {
+        position: relative;
+        background: #080c16;
+        padding: 2rem 0 1.5rem 0;
+        overflow: hidden;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .live-dot {
+        width: 10px;
+        height: 10px;
+        background-color: #10b981;
+        border-radius: 50%;
+        display: inline-block;
+        box-shadow: 0 0 10px #10b981;
+        animation: pulseLive 1.5s infinite;
+    }
+
+    @keyframes pulseLive {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.4; transform: scale(0.85); }
+    }
+
+    /* Moving Skyline Background */
+    .highway-skyline {
+        position: absolute;
+        top: 20px;
+        left: 0;
+        width: 300%;
+        height: 70px;
+        background-repeat: repeat-x;
+        background-position: bottom;
+        background-size: 400px 70px;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 70' fill='%23131c2d'%3E%3Crect x='10' y='20' width='35' height='50'/%3E%3Crect x='50' y='10' width='45' height='60'/%3E%3Crect x='100' y='30' width='30' height='40'/%3E%3Crect x='135' y='5' width='50' height='65'/%3E%3Crect x='190' y='25' width='40' height='45'/%3E%3Crect x='235' y='15' width='35' height='55'/%3E%3Crect x='275' y='35' width='45' height='35'/%3E%3Crect x='325' y='10' width='40' height='60'/%3E%3Crect x='370' y='25' width='25' height='45'/%3E%3C/svg%3E");
+        animation: scrollSkyline 40s linear infinite;
+        opacity: 0.45;
+        pointer-events: none;
+    }
+
+    @keyframes scrollSkyline {
+        0% { transform: translateX(0); }
+        100% { transform: translateX(-50%); }
+    }
+
+    /* Highway Road Track */
+    .highway-road {
+        position: relative;
+        width: 100%;
+        height: 140px;
+        background: #121824;
+        border-top: 4px solid #334155;
+        border-bottom: 4px solid #334155;
+        box-shadow: inset 0 15px 25px rgba(0, 0, 0, 0.7);
+        overflow: hidden;
+        margin-top: 0.75rem;
+    }
+
+    /* Road Curbs (Red & White striped barrier) */
+    .curb-stripe {
+        position: absolute;
+        width: 200%;
+        height: 6px;
+        background: repeating-linear-gradient(90deg, #ef4444 0, #ef4444 25px, #ffffff 25px, #ffffff 50px);
+        animation: roadSpeed 1.2s linear infinite;
+    }
+    .curb-top { top: 0; }
+    .curb-bottom { bottom: 0; }
+
+    /* Center Moving Road Dashes */
+    .lane-stripes {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 200%;
+        height: 5px;
+        background: repeating-linear-gradient(90deg, #f59e0b 0, #f59e0b 45px, transparent 45px, transparent 90px);
+        animation: roadSpeed 0.9s linear infinite;
+    }
+
+    @keyframes roadSpeed {
+        0% { transform: translateX(0); }
+        100% { transform: translateX(-90px); }
+    }
+
+    /* Passing Cab in Upper Lane */
+    .passing-cab {
+        position: absolute;
+        top: 15px;
+        left: -150px;
+        width: 110px;
+        animation: passBy 10s linear infinite;
+        opacity: 0.85;
+        pointer-events: none;
+    }
+
+    @keyframes passBy {
+        0% { left: -150px; }
+        100% { left: 110%; }
+    }
+
+    /* Main Featured Driving Taxi */
+    .main-taxi-driver {
+        position: absolute;
+        bottom: 14px;
+        left: 20%;
+        width: 170px;
+        z-index: 10;
+        cursor: pointer;
+        animation: taxiSuspension 0.6s ease-in-out infinite alternate;
+        transition: transform 0.3s ease;
+    }
+
+    .main-taxi-driver:hover {
+        transform: scale(1.05);
+    }
+
+    @keyframes taxiSuspension {
+        0% { transform: translateY(0px); }
+        100% { transform: translateY(-3px); }
+    }
+
+    /* Wheel Rotation */
+    .wheel-spin {
+        transform-origin: center;
+        animation: wheelRotate 0.35s linear infinite;
+    }
+
+    @keyframes wheelRotate {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    /* Glowing Headlight Beam */
+    .headlight-cone {
+        position: absolute;
+        top: 32px;
+        right: -140px;
+        width: 150px;
+        height: 50px;
+        background: linear-gradient(90deg, rgba(254, 240, 138, 0.6) 0%, rgba(254, 240, 138, 0.18) 60%, transparent 100%);
+        clip-path: polygon(0% 40%, 100% 0%, 100% 100%, 0% 70%);
+        pointer-events: none;
+        filter: blur(1px);
+        animation: beamFlicker 0.1s infinite alternate;
+    }
+
+    @keyframes beamFlicker {
+        0% { opacity: 0.85; }
+        100% { opacity: 1; }
+    }
+
+    /* Exhaust Smoke Puffs */
+    .smoke-puff-wrapper {
+        position: absolute;
+        bottom: 12px;
+        left: -15px;
+        pointer-events: none;
+    }
+
+    .smoke-puff {
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        background: rgba(148, 163, 184, 0.4);
+        border-radius: 50%;
+        animation: puffTrail 1s ease-out infinite;
+    }
+
+    .puff-1 { animation-delay: 0s; }
+    .puff-2 { animation-delay: 0.35s; }
+    .puff-3 { animation-delay: 0.7s; }
+
+    @keyframes puffTrail {
+        0% { transform: translate(0, 0) scale(0.6); opacity: 0.7; }
+        100% { transform: translate(-45px, -15px) scale(2.2); opacity: 0; }
+    }
+
+    /* Honk Bubble */
+    .honk-bubble {
+        position: absolute;
+        top: -42px;
+        left: 50%;
+        transform: translateX(-50%) scale(0);
+        background: #f59e0b;
+        color: #0f172a;
+        font-weight: 800;
+        font-size: 0.85rem;
+        padding: 0.3rem 0.75rem;
+        border-radius: 20px;
+        white-space: nowrap;
+        box-shadow: 0 4px 15px rgba(245, 158, 11, 0.5);
+        transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        pointer-events: none;
+        z-index: 20;
+    }
+
+    .honk-bubble.show {
+        transform: translateX(-50%) scale(1);
+    }
+
+    .honk-bubble::after {
+        content: '';
+        position: absolute;
+        bottom: -6px;
+        left: 50%;
+        transform: translateX(-50%);
+        border-width: 6px 6px 0;
+        border-style: solid;
+        border-color: #f59e0b transparent;
+    }
 </style>
 {% endblock %}
 
@@ -426,7 +641,136 @@
     </div>
 </section>
 
-<!-- Vehicle Fleet Section -->
+<!-- Live Animated Taxi Highway Track Section -->
+<section class="taxi-animation-banner">
+    <div class="container text-center mb-2">
+        <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill" style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.25);">
+            <span class="live-dot"></span>
+            <span class="small fw-bold text-warning text-uppercase" style="letter-spacing: 0.5px;">Live 24/7 Dispatch Radar &bull; Cabs on the Road</span>
+        </div>
+    </div>
+
+    <!-- Background Skyline -->
+    <div class="highway-skyline"></div>
+
+    <!-- Highway Road Track -->
+    <div class="highway-road">
+        <div class="curb-stripe curb-top"></div>
+        <div class="curb-stripe curb-bottom"></div>
+        <div class="lane-stripes"></div>
+
+        <!-- Upper Lane: Passing Outstation Cab -->
+        <div class="passing-cab">
+            <svg viewBox="0 0 160 65" width="100%" height="auto" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <ellipse cx="80" cy="60" rx="65" ry="5" fill="rgba(0,0,0,0.5)"/>
+                <path d="M20 40 L35 25 L65 20 L110 20 L135 32 L150 40 L150 52 L15 52 Z" fill="#64748b"/>
+                <path d="M40 26 L65 22 L105 22 L128 32 L105 32 L40 32 Z" fill="#0f172a"/>
+                <g class="wheel-spin" style="transform-origin: 40px 52px;">
+                    <circle cx="40" cy="52" r="10" fill="#0f172a" stroke="#cbd5e1" stroke-width="3"/>
+                    <line x1="40" y1="42" x2="40" y2="62" stroke="#cbd5e1" stroke-width="2"/>
+                    <line x1="30" y1="52" x2="50" y2="52" stroke="#cbd5e1" stroke-width="2"/>
+                </g>
+                <g class="wheel-spin" style="transform-origin: 125px 52px;">
+                    <circle cx="125" cy="52" r="10" fill="#0f172a" stroke="#cbd5e1" stroke-width="3"/>
+                    <line x1="125" y1="42" x2="125" y2="62" stroke="#cbd5e1" stroke-width="2"/>
+                    <line x1="115" y1="52" x2="135" y2="52" stroke="#cbd5e1" stroke-width="2"/>
+                </g>
+                <circle cx="16" cy="45" r="3" fill="#ef4444"/>
+            </svg>
+        </div>
+
+        <!-- Lower Lane: Featured Yellow Taxi -->
+        <div class="main-taxi-driver" id="mainTaxi" onclick="honkTaxi()" title="Click on taxi to honk!">
+            <!-- Speech Bubble -->
+            <div class="honk-bubble" id="honkBubble">BEEP BEEP! 📯</div>
+
+            <!-- Headlight Beam -->
+            <div class="headlight-cone"></div>
+
+            <!-- Exhaust Smoke Puffs -->
+            <div class="smoke-puff-wrapper">
+                <div class="smoke-puff puff-1"></div>
+                <div class="smoke-puff puff-2"></div>
+                <div class="smoke-puff puff-3"></div>
+            </div>
+
+            <!-- High Detail Yellow Taxi SVG -->
+            <svg viewBox="0 0 200 80" width="100%" height="auto" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <!-- Drop Shadow -->
+                <ellipse cx="100" cy="74" rx="85" ry="6" fill="rgba(0,0,0,0.65)"/>
+
+                <!-- Roof Taxi Sign -->
+                <rect x="80" y="8" width="40" height="12" rx="4" fill="#fbbf24" stroke="#000" stroke-width="1.5" style="filter: drop-shadow(0 0 6px #f59e0b);"/>
+                <text x="100" y="17" fill="#000" font-size="7" font-weight="900" font-family="sans-serif" text-anchor="middle">TAXI</text>
+
+                <!-- Taxi Chassis Main Body -->
+                <path d="M15 50 Q18 36 35 34 L62 20 Q70 17 85 17 L130 17 Q145 17 158 28 L185 42 Q195 47 195 56 L195 64 Q195 66 188 66 L165 66 Q165 52 145 52 Q125 52 125 66 L65 66 Q65 52 45 52 Q25 52 25 66 L12 66 Q8 66 8 60 Q8 52 15 50 Z" fill="#f59e0b"/>
+
+                <!-- Bumpers -->
+                <rect x="5" y="58" width="8" height="8" rx="2" fill="#334155"/>
+                <rect x="190" y="56" width="8" height="8" rx="2" fill="#334155"/>
+
+                <!-- Checkerboard Stripe -->
+                <g fill="#0f172a">
+                    <rect x="35" y="44" width="8" height="5"/>
+                    <rect x="51" y="44" width="8" height="5"/>
+                    <rect x="67" y="44" width="8" height="5"/>
+                    <rect x="83" y="44" width="8" height="5"/>
+                    <rect x="99" y="44" width="8" height="5"/>
+                    <rect x="115" y="44" width="8" height="5"/>
+                    <rect x="131" y="44" width="8" height="5"/>
+                    <rect x="147" y="44" width="8" height="5"/>
+                    <rect x="163" y="44" width="8" height="5"/>
+
+                    <rect x="43" y="49" width="8" height="5"/>
+                    <rect x="59" y="49" width="8" height="5"/>
+                    <rect x="75" y="49" width="8" height="5"/>
+                    <rect x="91" y="49" width="8" height="5"/>
+                    <rect x="107" y="49" width="8" height="5"/>
+                    <rect x="123" y="49" width="8" height="5"/>
+                    <rect x="139" y="49" width="8" height="5"/>
+                    <rect x="155" y="49" width="8" height="5"/>
+                </g>
+
+                <!-- Windows -->
+                <path d="M68 23 L96 23 L96 38 L48 38 Q58 27 68 23 Z" fill="#0f172a" stroke="#d97706" stroke-width="1.5"/>
+                <path d="M102 23 L128 23 Q140 23 150 32 L156 38 L102 38 Z" fill="#0f172a" stroke="#d97706" stroke-width="1.5"/>
+                <!-- Driver Silhouette -->
+                <circle cx="118" cy="30" r="5" fill="#f59e0b"/>
+                <path d="M110 38 Q118 33 126 38 Z" fill="#f59e0b"/>
+
+                <!-- Front Headlight & Rear Light -->
+                <path d="M188 47 Q194 48 194 54 L185 54 Z" fill="#fef08a" style="filter: drop-shadow(0 0 5px #fef08a);"/>
+                <rect x="8" y="48" width="5" height="7" rx="1" fill="#ef4444" style="filter: drop-shadow(0 0 4px #ef4444);"/>
+
+                <!-- Front Wheel -->
+                <g class="wheel-spin" style="transform-origin: 145px 64px;">
+                    <circle cx="145" cy="64" r="14" fill="#0f172a" stroke="#334155" stroke-width="3"/>
+                    <circle cx="145" cy="64" r="7" fill="#64748b"/>
+                    <circle cx="145" cy="64" r="3" fill="#fbbf24"/>
+                    <line x1="145" y1="50" x2="145" y2="78" stroke="#f8fafc" stroke-width="2"/>
+                    <line x1="131" y1="64" x2="159" y2="64" stroke="#f8fafc" stroke-width="2"/>
+                </g>
+
+                <!-- Rear Wheel -->
+                <g class="wheel-spin" style="transform-origin: 45px 64px;">
+                    <circle cx="45" cy="64" r="14" fill="#0f172a" stroke="#334155" stroke-width="3"/>
+                    <circle cx="45" cy="64" r="7" fill="#64748b"/>
+                    <circle cx="45" cy="64" r="3" fill="#fbbf24"/>
+                    <line x1="45" y1="50" x2="45" y2="78" stroke="#f8fafc" stroke-width="2"/>
+                    <line x1="31" y1="64" x2="59" y2="64" stroke="#f8fafc" stroke-width="2"/>
+                </g>
+            </svg>
+        </div>
+    </div>
+
+    <!-- Interactive Hint & Speed Button -->
+    <div class="container mt-2 text-center">
+        <button type="button" class="btn btn-sm btn-outline-warning rounded-pill px-3 py-1" onclick="honkTaxi()">
+            <i class="bi bi-volume-up-fill me-1"></i> Tap to Honk Taxi Horn &bull; 📯 Beep Beep!
+        </button>
+    </div>
+</section>
 <section class="py-5" id="fleet" style="background-color: #0f172a;">
     <div class="container py-4">
         <div class="text-center max-w-700 mx-auto mb-5">
@@ -825,6 +1169,39 @@
         const modal = document.getElementById('bookingSuccessModal');
         if (modal) {
             modal.style.display = 'none';
+        }
+    }
+
+    // Interactive Taxi Horn & Sound Effect
+    function honkTaxi() {
+        const bubble = document.getElementById('honkBubble');
+        if (bubble) {
+            bubble.classList.add('show');
+            setTimeout(function() {
+                bubble.classList.remove('show');
+            }, 1200);
+        }
+
+        // Web Audio API Dual Tone Car Horn (F4 349Hz + A4 440Hz)
+        try {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (AudioCtx) {
+                const ctx = new AudioCtx();
+                [349.23, 440.0].forEach(function(freq) {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(freq, ctx.currentTime);
+                    gain.gain.setValueAtTime(0.06, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start();
+                    osc.stop(ctx.currentTime + 0.35);
+                });
+            }
+        } catch (e) {
+            // Audio context silently ignored if permissions not granted
         }
     }
 </script>

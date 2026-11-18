@@ -54,4 +54,10 @@ class AdminLoginTests(TestCase):
             'password': 'WrongPassword'
         })
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Invalid credentials')
+        self.assertContains(response, 'Please enter a correct')
+
+    def test_admin_logout(self):
+        """Admin user can log out successfully."""
+        self.client.login(username='superadmin', password='SecretPassword123')
+        response = self.client.get(reverse('admin_logout'))
+        self.assertRedirects(response, reverse('admin_login'))

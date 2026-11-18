@@ -123,6 +123,9 @@
         <!-- Login Form (NO REGISTRATION) -->
         <form method="POST" action="{% url 'admin_login' %}">
             {% csrf_token %}
+            {% if next %}
+                <input type="hidden" name="next" value="{{ next }}">
+            {% endif %}
 
             <!-- Username -->
             <div class="mb-3">

@@ -3,7 +3,9 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils.http import url_has_allowed_host_and_scheme
+from django.db.models import Sum
 from .forms import AdminLoginForm
+from .models import Driver, Vehicle, Booking
 
 
 def index(request):
@@ -17,7 +19,6 @@ def admin_login_view(request):
     Authenticates against Django's User model and enforces admin (staff/superuser) status.
     No registration allowed.
     """
-    # Redirect if already logged in as admin
     if request.user.is_authenticated and (request.user.is_staff or request.user.is_superuser):
         return redirect('admin_dashboard')
 
@@ -29,13 +30,11 @@ def admin_login_view(request):
             user = form.get_user()
             login(request, user)
 
-            # Session handling for remember_me
             if not form.cleaned_data.get('remember_me'):
-                request.session.set_expiry(0)  # expires on browser close
+                request.session.set_expiry(0)
 
             messages.success(request, f'Welcome back, {user.username}!')
 
-            # Validate redirect URL for security
             if redirect_to and url_has_allowed_host_and_scheme(
                 url=redirect_to,
                 allowed_hosts={request.get_host()},
@@ -59,15 +58,35 @@ def admin_login_view(request):
 @login_required(login_url='admin_login')
 def admin_dashboard_view(request):
     """
-    Admin Dashboard protected view.
-    Only accessible to authenticated administrators.
+    Basic Admin Dashboard protected view that loads after admin login.
+    Displays taxi booking metrics, recent trips, and driver statuses.
     """
     if not (request.user.is_staff or request.user.is_superuser):
         logout(request)
         messages.error(request, 'Session terminated: Administrator privileges required.')
         return redirect('admin_login')
 
-    return render(request, 'core/admin_dashboard.html')
+    total_bookings = Booking.objects.count()
+    active_rides = Booking.objects.filter(status__in=['ongoing', 'confirmed']).count()
+    available_drivers = Driver.objects.filter(status='available').count()
+    total_vehicles = Vehicle.objects.filter(is_active=True).count()
+    revenue_agg = Booking.objects.filter(status='completed').aggregate(Sum('fare'))
+    total_revenue = revenue_agg['fare__sum'] or 0
+
+    recent_bookings = Booking.objects.all()[:8]
+    drivers = Driver.objects.all()[:5]
+
+    context = {
+        'total_bookings': total_bookings,
+        'active_rides': active_rides,
+        'available_drivers': available_drivers,
+        'total_vehicles': total_vehicles,
+        'total_revenue': total_revenue,
+        'recent_bookings': recent_bookings,
+        'drivers': drivers,
+    }
+
+    return render(request, 'core/admin_dashboard.html', context)
 
 
 def admin_logout_view(request):

@@ -107,7 +107,7 @@
         <div class="d-flex align-items-center gap-3">
             <span class="text-secondary small d-none d-md-inline">
                 <i class="bi bi-person-circle me-1 text-warning"></i>
-                Admin: <strong class="text-white">{{ user.username }}</strong>
+                Admin: <strong class="text-white">{{ user.first_name|default:user.username }}</strong>
             </span>
             <a href="{% url 'index' %}" class="btn btn-outline-secondary btn-sm" target="_blank">
                 <i class="bi bi-globe me-1"></i> Live Site
@@ -127,7 +127,7 @@
     <!-- Welcome Header -->
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
         <div>
-            <h2 class="fw-bold mb-1">Hello, {{ user.username }}! 👋</h2>
+            <h2 class="fw-bold mb-1">Hello, {{ user.first_name|default:user.username }}! 👋</h2>
             <p class="text-secondary small mb-0">Overview of active rides, bookings, and fleet status.</p>
         </div>
         <div class="d-flex gap-2">
@@ -322,6 +322,9 @@
                     </a>
                     <a href="/admin/core/vehicle/" target="_blank" class="btn btn-outline-light btn-sm text-start">
                         <i class="bi bi-car-front me-2 text-success"></i> Manage Vehicles
+                    </a>
+                    <a href="/admin/core/customadmin/" target="_blank" class="btn btn-outline-light btn-sm text-start">
+                        <i class="bi bi-person-badge-fill me-2 text-warning"></i> View Custom Admins ({{ total_custom_admins }})
                     </a>
                 </div>
             </div>

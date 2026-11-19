@@ -172,14 +172,22 @@
             </div>
 
             <!-- Submit Button -->
-            <button type="submit" class="btn btn-taxi w-100 py-2 mb-3">
+            <button type="submit" class="btn btn-taxi w-100 py-2 mb-2">
                 <i class="bi bi-box-arrow-in-right me-1"></i> Sign In to Admin Panel
             </button>
 
-            <!-- Restricted Notice (Explicit No-Registration indicator) -->
-            <div class="security-notice text-center mt-3">
-                <i class="bi bi-lock-fill text-warning me-1"></i>
-                <span><strong>Manual Admin Access:</strong> Public registration is closed. Only authorized system administrators may log in.</span>
+            <!-- Admin Registration Link -->
+            <div class="text-center my-3 small">
+                <span class="text-secondary">Need administrator access?</span>
+                <a href="{% url 'admin_register' %}" class="text-warning text-decoration-none fw-semibold ms-1">
+                    Register Admin <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
+
+            <!-- Restricted Notice -->
+            <div class="security-notice text-center mt-2">
+                <i class="bi bi-database-fill-lock text-warning me-1"></i>
+                <span><strong>Admin Portal:</strong> User accounts are verified and stored in the <code>custom_admin_users</code> table.</span>
             </div>
         </form>
 

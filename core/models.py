@@ -1,6 +1,34 @@
 from django.db import models
 
 
+class CustomAdmin(models.Model):
+    ROLE_CHOICES = [
+        ('super_admin', 'Super Administrator'),
+        ('fleet_manager', 'Fleet Manager'),
+        ('dispatcher', 'Ride Dispatcher'),
+        ('support_lead', 'Customer Support Lead'),
+    ]
+
+    full_name = models.CharField(max_length=150)
+    username = models.CharField(max_length=100, unique=True)
+    email = models.EmailField(unique=True)
+    phone = models.CharField(max_length=15)
+    role = models.CharField(max_length=30, choices=ROLE_CHOICES, default='fleet_manager')
+    password = models.CharField(max_length=255)  # Stored securely hashed with make_password
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_login = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = 'custom_admin_users'
+        verbose_name = 'Custom Admin'
+        verbose_name_plural = 'Custom Admins'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.full_name} ({self.username}) - {self.get_role_display()}"
+
+
 class Driver(models.Model):
     STATUS_CHOICES = [
         ('available', 'Available'),

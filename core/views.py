@@ -1,5 +1,6 @@
 import random
 from django.shortcuts import render, redirect
+from django.urls import reverse
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password, check_password
@@ -8,7 +9,7 @@ from django.contrib import messages
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils import timezone
 from django.db.models import Sum
-from .forms import AdminLoginForm, AdminRegistrationForm
+from .forms import AdminLoginForm, AdminRegistrationForm, AdminForgotPasswordForm
 from .models import CustomAdmin, Driver, Vehicle, Booking
 
 
@@ -79,7 +80,7 @@ def admin_register_view(request):
             custom_admin.save()
 
             # Synchronize with Django User model for session authentication
-            user, created = User.objects.get_or_create(
+            user, _ = User.objects.get_or_create(
                 username=custom_admin.username,
                 defaults={
                     'email': custom_admin.email,
@@ -132,7 +133,6 @@ def admin_login_view(request):
         custom_admin = CustomAdmin.objects.filter(username__iexact=username, is_active=True).first()
 
         if custom_admin and check_password(password, custom_admin.password):
-            # Ensure Django auth user exists and sync
             django_user, _ = User.objects.get_or_create(
                 username=custom_admin.username,
                 defaults={
@@ -193,6 +193,95 @@ def admin_login_view(request):
     return render(request, 'core/admin_login.html', {
         'form': form,
         'next': redirect_to
+    })
+
+
+def admin_forgot_password_view(request):
+    """
+    Forgot Password view for Administrator Accounts.
+    Accepts the admin's email and initiates password recovery.
+    """
+    reset_sent = False
+    target_email = ""
+    reset_url = ""
+
+    if request.method == 'POST':
+        form = AdminForgotPasswordForm(request.POST)
+        if form.is_valid():
+            target_email = form.cleaned_data['email'].strip().lower()
+
+            # Verify admin account existence in custom admin table or Django User
+            admin_found = (
+                CustomAdmin.objects.filter(email__iexact=target_email).exists() or
+                User.objects.filter(email__iexact=target_email, is_staff=True).exists()
+            )
+
+            if admin_found:
+                reset_sent = True
+                reset_url = request.build_absolute_uri(reverse('admin_reset_password')) + f"?email={target_email}"
+                messages.success(
+                    request,
+                    f"Password reset instructions have been generated for {target_email}."
+                )
+            else:
+                messages.error(
+                    request,
+                    f"No administrator account is registered with the email: {target_email}."
+                )
+    else:
+        form = AdminForgotPasswordForm()
+
+    return render(request, 'core/admin_forgot_password.html', {
+        'form': form,
+        'reset_sent': reset_sent,
+        'target_email': target_email,
+        'reset_url': reset_url,
+    })
+
+
+def admin_reset_password_view(request):
+    """
+    Password Reset confirmation view.
+    Allows administrators to set a new password.
+    """
+    email = request.GET.get('email', '') or request.POST.get('email', '')
+
+    if request.method == 'POST':
+        email = request.POST.get('email', '').strip().lower()
+        new_password = request.POST.get('new_password', '')
+        confirm_password = request.POST.get('confirm_password', '')
+
+        if not new_password or not confirm_password:
+            messages.error(request, "Please enter both password fields.")
+        elif new_password != confirm_password:
+            messages.error(request, "Passwords do not match.")
+        elif len(new_password) < 6:
+            messages.error(request, "Password must be at least 6 characters long.")
+        else:
+            updated = False
+
+            # Update custom admin table
+            custom_admin = CustomAdmin.objects.filter(email__iexact=email).first()
+            if custom_admin:
+                custom_admin.password = make_password(new_password)
+                custom_admin.save(update_fields=['password'])
+                updated = True
+
+            # Update Django User
+            user = User.objects.filter(email__iexact=email).first()
+            if user:
+                user.set_password(new_password)
+                user.save()
+                updated = True
+
+            if updated:
+                messages.success(request, "Password has been reset successfully! Please sign in with your new password.")
+                return redirect('admin_login')
+            else:
+                messages.error(request, "Unable to find an account for the provided email.")
+
+    return render(request, 'core/admin_reset_password.html', {
+        'email': email,
     })
 
 

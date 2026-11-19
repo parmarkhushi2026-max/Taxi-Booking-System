@@ -77,7 +77,6 @@ class AdminLoginTests(TestCase):
         })
         self.assertRedirects(response, reverse('admin_login'))
 
-        # Verify entry exists in custom admin table
         custom_admin = CustomAdmin.objects.filter(username='admin_rajendra').first()
         self.assertIsNotNone(custom_admin)
         self.assertEqual(custom_admin.full_name, 'Rajendra Singh')
@@ -97,14 +96,12 @@ class AdminLoginTests(TestCase):
             'confirm_password': 'Password123!',
         })
 
-        # Log in with the registered credentials
         login_res = self.client.post(reverse('admin_login'), {
             'username': 'admin_aman',
             'password': 'Password123!',
         })
         self.assertRedirects(login_res, reverse('admin_dashboard'))
 
-        # Access dashboard
         dash_res = self.client.get(reverse('admin_dashboard'))
         self.assertEqual(dash_res.status_code, 200)
         self.assertContains(dash_res, 'Aman Verma')
@@ -124,12 +121,60 @@ class AdminLoginTests(TestCase):
         self.assertContains(response, 'Passwords do not match')
         self.assertFalse(CustomAdmin.objects.filter(username='fail_admin').exists())
 
+    def test_admin_forgot_password_page_renders_with_email_field(self):
+        """Verify forgot password page renders with email field."""
+        response = self.client.get(reverse('admin_forgot_password'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'core/admin_forgot_password.html')
+        self.assertContains(response, 'Forgot Password')
+        self.assertContains(response, 'Admin Email Address')
+        self.assertContains(response, 'name="email"')
+
+    def test_admin_forgot_password_submitting_valid_email(self):
+        """Submitting registered email displays recovery instructions."""
+        response = self.client.post(reverse('admin_forgot_password'), {
+            'email': 'admin@taxi.com',
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Reset Link Dispatched')
+        self.assertContains(response, 'admin@taxi.com')
+
+    def test_admin_forgot_password_invalid_email(self):
+        """Submitting non-existing email shows error message."""
+        response = self.client.post(reverse('admin_forgot_password'), {
+            'email': 'unknown@taxi.com',
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'No administrator account is registered')
+
+    def test_admin_reset_password_updates_credentials(self):
+        """Resetting password updates credentials and allows sign in."""
+        # Create admin in custom admin table
+        CustomAdmin.objects.create(
+            full_name='Reset Test Admin',
+            username='reset_admin',
+            email='reset@taxi.com',
+            phone='9988776655',
+            password='oldHashedPassword',
+        )
+
+        response = self.client.post(reverse('admin_reset_password'), {
+            'email': 'reset@taxi.com',
+            'new_password': 'BrandNewPassword123',
+            'confirm_password': 'BrandNewPassword123',
+        })
+        self.assertRedirects(response, reverse('admin_login'))
+
+        custom_admin = CustomAdmin.objects.get(email='reset@taxi.com')
+        self.assertTrue(check_password('BrandNewPassword123', custom_admin.password))
+
     def test_admin_login_page_renders(self):
-        """Verify the login page renders with link to registration."""
+        """Verify the login page renders with link to registration and forgot password."""
         response = self.client.get(reverse('admin_login'))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'core/admin_login.html')
         self.assertContains(response, 'Register Admin')
+        self.assertContains(response, 'Forgot Password?')
 
     def test_admin_login_success_and_redirects_to_dashboard(self):
         """Admin user can log in and gets redirected to the dashboard."""

@@ -134,3 +134,20 @@ class AdminRegistrationForm(forms.ModelForm):
             if len(password) < 6:
                 raise ValidationError("Password must be at least 6 characters long.")
         return cleaned_data
+
+
+class AdminForgotPasswordForm(forms.Form):
+    """
+    Forgot Password Form for Admin Accounts.
+    Accepts the registered email address.
+    """
+    email = forms.EmailField(
+        label="Registered Admin Email",
+        widget=forms.EmailInput(attrs={
+            'class': 'form-control form-control-custom w-100',
+            'placeholder': 'e.g. admin@taxibooking.com',
+            'id': 'forgotEmail',
+            'autofocus': True,
+            'autocomplete': 'email',
+        })
+    )

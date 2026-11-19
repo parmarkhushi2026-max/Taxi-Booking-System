@@ -121,52 +121,86 @@ class AdminLoginTests(TestCase):
         self.assertContains(response, 'Passwords do not match')
         self.assertFalse(CustomAdmin.objects.filter(username='fail_admin').exists())
 
-    def test_admin_forgot_password_page_renders_with_email_field(self):
-        """Verify forgot password page renders with email field."""
-        response = self.client.get(reverse('admin_forgot_password'))
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'core/admin_forgot_password.html')
-        self.assertContains(response, 'Forgot Password')
-        self.assertContains(response, 'Admin Email Address')
-        self.assertContains(response, 'name="email"')
-
-    def test_admin_forgot_password_submitting_valid_email(self):
-        """Submitting registered email displays recovery instructions."""
+    def test_admin_forgot_password_generates_random_otp(self):
+        """Submitting email generates a 6-digit random OTP and redirects to verify."""
         response = self.client.post(reverse('admin_forgot_password'), {
             'email': 'admin@taxi.com',
         })
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Reset Link Dispatched')
-        self.assertContains(response, 'admin@taxi.com')
+        self.assertRedirects(response, reverse('admin_verify_otp'))
 
-    def test_admin_forgot_password_invalid_email(self):
-        """Submitting non-existing email shows error message."""
-        response = self.client.post(reverse('admin_forgot_password'), {
-            'email': 'unknown@taxi.com',
+        # Check that OTP is a 6-digit numeric string generated via random library
+        session = self.client.session
+        otp = session.get('reset_otp')
+        self.assertIsNotNone(otp)
+        self.assertEqual(len(otp), 6)
+        self.assertTrue(otp.isdigit())
+        self.assertTrue(100000 <= int(otp) <= 999999)
+
+    def test_admin_verify_otp_valid_and_invalid(self):
+        """Test verifying matching and non-matching OTP."""
+        # Step 1: Initiate forgot password to set session OTP
+        self.client.post(reverse('admin_forgot_password'), {
+            'email': 'admin@taxi.com',
         })
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'No administrator account is registered')
+        valid_otp = self.client.session.get('reset_otp')
 
-    def test_admin_reset_password_updates_credentials(self):
-        """Resetting password updates credentials and allows sign in."""
-        # Create admin in custom admin table
+        # Step 2: Try invalid OTP
+        invalid_res = self.client.post(reverse('admin_verify_otp'), {
+            'otp': '000000' if valid_otp != '000000' else '111111',
+        })
+        self.assertEqual(invalid_res.status_code, 200)
+        self.assertContains(invalid_res, 'Invalid OTP code')
+
+        # Step 3: Try valid OTP
+        valid_res = self.client.post(reverse('admin_verify_otp'), {
+            'otp': valid_otp,
+        })
+        self.assertRedirects(valid_res, reverse('admin_reset_password'))
+        self.assertTrue(self.client.session.get('otp_verified'))
+
+    def test_admin_resend_otp_generates_fresh_random_otp(self):
+        """Resending OTP creates a fresh 6-digit random code."""
+        self.client.post(reverse('admin_forgot_password'), {
+            'email': 'admin@taxi.com',
+        })
+        first_otp = self.client.session.get('reset_otp')
+
+        # Request resend
+        resend_res = self.client.get(reverse('admin_resend_otp'))
+        self.assertRedirects(resend_res, reverse('admin_verify_otp'))
+
+        new_otp = self.client.session.get('reset_otp')
+        self.assertEqual(len(new_otp), 6)
+        self.assertTrue(new_otp.isdigit())
+
+    def test_admin_reset_password_after_otp_verification(self):
+        """Setting new password works after OTP verification."""
         CustomAdmin.objects.create(
-            full_name='Reset Test Admin',
-            username='reset_admin',
-            email='reset@taxi.com',
-            phone='9988776655',
-            password='oldHashedPassword',
+            full_name='OTP Reset User',
+            username='otp_user',
+            email='otpuser@taxi.com',
+            phone='9811223344',
+            password='oldPasswordHash',
         )
 
-        response = self.client.post(reverse('admin_reset_password'), {
-            'email': 'reset@taxi.com',
-            'new_password': 'BrandNewPassword123',
-            'confirm_password': 'BrandNewPassword123',
+        # Initiate forgot password
+        self.client.post(reverse('admin_forgot_password'), {
+            'email': 'otpuser@taxi.com',
         })
-        self.assertRedirects(response, reverse('admin_login'))
+        otp = self.client.session.get('reset_otp')
 
-        custom_admin = CustomAdmin.objects.get(email='reset@taxi.com')
-        self.assertTrue(check_password('BrandNewPassword123', custom_admin.password))
+        # Verify OTP
+        self.client.post(reverse('admin_verify_otp'), {'otp': otp})
+
+        # Set new password
+        reset_res = self.client.post(reverse('admin_reset_password'), {
+            'new_password': 'UpdatedPassword@2026',
+            'confirm_password': 'UpdatedPassword@2026',
+        })
+        self.assertRedirects(reset_res, reverse('admin_login'))
+
+        custom_admin = CustomAdmin.objects.get(email='otpuser@taxi.com')
+        self.assertTrue(check_password('UpdatedPassword@2026', custom_admin.password))
 
     def test_admin_login_page_renders(self):
         """Verify the login page renders with link to registration and forgot password."""

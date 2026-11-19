@@ -1,0 +1,139 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Verify OTP &bull; Taxi Booking Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+    .otp-container {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2.5rem 1rem;
+        background: radial-gradient(circle at 10% 20%, rgba(245, 158, 11, 0.12) 0%, transparent 40%),
+                    radial-gradient(circle at 90% 80%, rgba(59, 130, 246, 0.08) 0%, transparent 40%),
+                    #0b0f19;
+    }
+
+    .otp-card {
+        width: 100%;
+        max-width: 460px;
+        padding: 2.5rem 2rem;
+        border-radius: 20px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.65);
+    }
+
+    .taxi-logo-badge {
+        width: 64px;
+        height: 64px;
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(245, 158, 11, 0.05));
+        border: 1px solid rgba(245, 158, 11, 0.35);
+        color: #f59e0b;
+        border-radius: 16px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .form-control-custom {
+        background-color: #0f172a;
+        border: 1px solid #334155;
+        color: #f8fafc;
+        border-radius: 12px;
+        padding: 0.85rem 1rem;
+        transition: all 0.2s ease;
+    }
+
+    .form-control-custom:focus {
+        background-color: #0f172a;
+        border-color: #f59e0b;
+        color: #f8fafc;
+        box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.2);
+    }
+
+    .otp-banner {
+        background: rgba(245, 158, 11, 0.08);
+        border: 1px dashed rgba(245, 158, 11, 0.35);
+        border-radius: 14px;
+        padding: 1rem;
+    }
+
+    .otp-code-highlight {
+        font-size: 2rem;
+        letter-spacing: 6px;
+        color: #f59e0b;
+        font-weight: 800;
+        font-family: monospace;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="otp-container">
+    <div class="card-custom otp-card">
+        <!-- Logo & Header -->
+        <div class="text-center">
+            <div class="taxi-logo-badge">
+                <i class="bi bi-shield-check"></i>
+            </div>
+            <h3 class="fw-bold text-white mb-1">Enter 6-Digit OTP</h3>
+            <p class="text-secondary small mb-3">Verification code sent to: <strong class="text-white">{{ email }}</strong></p>
+        </div>
+
+        <!-- Alert Messages -->
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show py-2 px-3 small border-0 d-flex align-items-center mb-3" role="alert">
+                    <i class="bi {% if message.tags == 'error' %}bi-exclamation-triangle-fill{% else %}bi-info-circle-fill{% endif %} me-2"></i>
+                    <div>{{ message }}</div>
+                    <button type="button" class="btn-close btn-close-white ms-auto p-2" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Generated OTP Display Box (For easy local testing) -->
+        <div class="otp-banner text-center mb-4">
+            <div class="small text-secondary mb-1">
+                <i class="bi bi-shuffle me-1 text-warning"></i> Generated using Python <code>random</code> library:
+            </div>
+            <div class="otp-code-highlight my-1">{{ current_otp }}</div>
+            <div class="text-secondary small" style="font-size: 0.75rem;">
+                <i class="bi bi-clock-history me-1 text-info"></i> Valid for 10 minutes
+            </div>
+        </div>
+
+        <!-- OTP Form -->
+        <form method="POST" action="{% url 'admin_verify_otp' %}">
+            {% csrf_token %}
+
+            <div class="mb-4">
+                <label for="otpInput" class="form-label small fw-semibold text-secondary mb-2 text-center w-100">
+                    Enter Verification Code
+                </label>
+                {{ form.otp }}
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="btn btn-taxi w-100 py-2 mb-3">
+                <i class="bi bi-check-circle-fill me-1"></i> Verify OTP & Reset Password
+            </button>
+        </form>
+
+        <!-- Resend OTP Action -->
+        <div class="text-center mb-3">
+            <a href="{% url 'admin_resend_otp' %}" class="small text-warning text-decoration-none fw-semibold">
+                <i class="bi bi-arrow-repeat me-1"></i> Regenerate / Resend OTP
+            </a>
+        </div>
+
+        <!-- Navigation Link -->
+        <div class="text-center mt-3 small pt-3 border-top border-secondary border-opacity-25">
+            <a href="{% url 'admin_login' %}" class="text-secondary text-decoration-none">
+                <i class="bi bi-arrow-left me-1"></i> Cancel & Return to Login
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

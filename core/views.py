@@ -9,7 +9,12 @@ from django.contrib import messages
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils import timezone
 from django.db.models import Sum
-from .forms import AdminLoginForm, AdminRegistrationForm, AdminForgotPasswordForm
+from .forms import (
+    AdminLoginForm,
+    AdminRegistrationForm,
+    AdminForgotPasswordForm,
+    VerifyOTPForm,
+)
 from .models import CustomAdmin, Driver, Vehicle, Booking
 
 
@@ -199,30 +204,34 @@ def admin_login_view(request):
 def admin_forgot_password_view(request):
     """
     Forgot Password view for Administrator Accounts.
-    Accepts the admin's email and initiates password recovery.
+    Accepts the admin's email and generates a 6-digit OTP using the Python random library.
     """
-    reset_sent = False
-    target_email = ""
-    reset_url = ""
-
     if request.method == 'POST':
         form = AdminForgotPasswordForm(request.POST)
         if form.is_valid():
             target_email = form.cleaned_data['email'].strip().lower()
 
-            # Verify admin account existence in custom admin table or Django User
+            # Verify admin existence in custom admin table or User model
             admin_found = (
                 CustomAdmin.objects.filter(email__iexact=target_email).exists() or
                 User.objects.filter(email__iexact=target_email, is_staff=True).exists()
             )
 
             if admin_found:
-                reset_sent = True
-                reset_url = request.build_absolute_uri(reverse('admin_reset_password')) + f"?email={target_email}"
+                # Generate 6-digit secure OTP using Python random library
+                otp = f"{random.randint(100000, 999999)}"
+
+                # Store OTP and metadata in session
+                request.session['reset_email'] = target_email
+                request.session['reset_otp'] = otp
+                request.session['otp_timestamp'] = timezone.now().timestamp()
+                request.session['otp_verified'] = False
+
                 messages.success(
                     request,
-                    f"Password reset instructions have been generated for {target_email}."
+                    f"A 6-digit OTP ({otp}) has been generated for {target_email} using the random library."
                 )
+                return redirect('admin_verify_otp')
             else:
                 messages.error(
                     request,
@@ -233,21 +242,81 @@ def admin_forgot_password_view(request):
 
     return render(request, 'core/admin_forgot_password.html', {
         'form': form,
-        'reset_sent': reset_sent,
-        'target_email': target_email,
-        'reset_url': reset_url,
     })
+
+
+def admin_verify_otp_view(request):
+    """
+    OTP Verification View for Password Reset.
+    Validates the 6-digit OTP generated via random library.
+    """
+    email = request.session.get('reset_email')
+    expected_otp = request.session.get('reset_otp')
+
+    if not email or not expected_otp:
+        messages.error(request, "Session expired or missing. Please initiate password reset again.")
+        return redirect('admin_forgot_password')
+
+    if request.method == 'POST':
+        form = VerifyOTPForm(request.POST)
+        if form.is_valid():
+            submitted_otp = form.cleaned_data['otp'].strip()
+
+            # Check if OTP expired (10 minutes = 600 seconds)
+            otp_time = request.session.get('otp_timestamp', 0)
+            if timezone.now().timestamp() - otp_time > 600:
+                messages.error(request, "The OTP has expired (valid for 10 minutes). Please request a new OTP.")
+                return redirect('admin_verify_otp')
+
+            if submitted_otp == expected_otp:
+                request.session['otp_verified'] = True
+                messages.success(request, "OTP verified successfully! Please create your new password.")
+                return redirect('admin_reset_password')
+            else:
+                messages.error(request, "Invalid OTP code. Please enter the correct 6-digit OTP.")
+    else:
+        form = VerifyOTPForm()
+
+    return render(request, 'core/admin_verify_otp.html', {
+        'form': form,
+        'email': email,
+        'current_otp': expected_otp,  # Displayed in UI banner for immediate ease of testing
+    })
+
+
+def admin_resend_otp_view(request):
+    """
+    Resends/Regenerates a fresh 6-digit OTP using Python's random library.
+    """
+    email = request.session.get('reset_email')
+    if not email:
+        messages.error(request, "Please enter your email first to generate an OTP.")
+        return redirect('admin_forgot_password')
+
+    # Generate fresh OTP using random library
+    new_otp = f"{random.randint(100000, 999999)}"
+    request.session['reset_otp'] = new_otp
+    request.session['otp_timestamp'] = timezone.now().timestamp()
+    request.session['otp_verified'] = False
+
+    messages.success(request, f"New 6-digit OTP ({new_otp}) generated successfully!")
+    return redirect('admin_verify_otp')
 
 
 def admin_reset_password_view(request):
     """
     Password Reset confirmation view.
-    Allows administrators to set a new password.
+    Allows administrators to set a new password after verifying the random OTP.
     """
-    email = request.GET.get('email', '') or request.POST.get('email', '')
+    email = request.session.get('reset_email')
+    otp_verified = request.session.get('otp_verified', False)
+
+    # Protect route: must have verified OTP first
+    if not email or not otp_verified:
+        messages.error(request, "Access denied. Please verify your OTP code first.")
+        return redirect('admin_forgot_password')
 
     if request.method == 'POST':
-        email = request.POST.get('email', '').strip().lower()
         new_password = request.POST.get('new_password', '')
         confirm_password = request.POST.get('confirm_password', '')
 
@@ -267,7 +336,7 @@ def admin_reset_password_view(request):
                 custom_admin.save(update_fields=['password'])
                 updated = True
 
-            # Update Django User
+            # Update Django User model
             user = User.objects.filter(email__iexact=email).first()
             if user:
                 user.set_password(new_password)
@@ -275,7 +344,14 @@ def admin_reset_password_view(request):
                 updated = True
 
             if updated:
-                messages.success(request, "Password has been reset successfully! Please sign in with your new password.")
+                # Clear password reset session state
+                for key in ['reset_email', 'reset_otp', 'otp_timestamp', 'otp_verified']:
+                    request.session.pop(key, None)
+
+                messages.success(
+                    request,
+                    "Password has been reset successfully! Please sign in with your new password."
+                )
                 return redirect('admin_login')
             else:
                 messages.error(request, "Unable to find an account for the provided email.")

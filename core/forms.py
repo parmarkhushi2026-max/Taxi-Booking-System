@@ -151,3 +151,24 @@ class AdminForgotPasswordForm(forms.Form):
             'autocomplete': 'email',
         })
     )
+
+
+class VerifyOTPForm(forms.Form):
+    """
+    OTP Verification Form for Password Reset.
+    Validates the 6-digit numeric OTP generated via Python random.
+    """
+    otp = forms.CharField(
+        max_length=6,
+        min_length=6,
+        label="6-Digit OTP Code",
+        widget=forms.TextInput(attrs={
+            'class': 'form-control form-control-custom w-100 text-center fs-3 fw-bold',
+            'placeholder': '• • • • • •',
+            'id': 'otpInput',
+            'maxlength': '6',
+            'autofocus': True,
+            'autocomplete': 'one-time-code',
+            'style': 'letter-spacing: 8px;',
+        })
+    )

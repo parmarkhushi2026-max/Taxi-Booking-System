@@ -16,6 +16,7 @@ from .forms import (
     AdminRegistrationForm,
     AdminForgotPasswordForm,
     VerifyOTPForm,
+    AdminResetPasswordForm,
 )
 from .models import CustomAdmin, Driver, Vehicle, Booking
 
@@ -367,16 +368,9 @@ def admin_reset_password_view(request):
         return redirect('admin_forgot_password')
 
     if request.method == 'POST':
-        new_password = request.POST.get('new_password', '')
-        confirm_password = request.POST.get('confirm_password', '')
-
-        if not new_password or not confirm_password:
-            messages.error(request, "Please enter both password fields.")
-        elif new_password != confirm_password:
-            messages.error(request, "Passwords do not match.")
-        elif len(new_password) < 6:
-            messages.error(request, "Password must be at least 6 characters long.")
-        else:
+        form = AdminResetPasswordForm(request.POST)
+        if form.is_valid():
+            new_password = form.cleaned_data['new_password']
             updated = False
 
             # Update custom admin table
@@ -386,7 +380,13 @@ def admin_reset_password_view(request):
                 custom_admin.save(update_fields=['password'])
                 updated = True
 
-            # Update Django User model
+                # Also sync corresponding Django auth User model
+                django_user = User.objects.filter(username__iexact=custom_admin.username).first()
+                if django_user:
+                    django_user.set_password(new_password)
+                    django_user.save()
+
+            # Update Django User model if user found by email
             user = User.objects.filter(email__iexact=email).first()
             if user:
                 user.set_password(new_password)
@@ -405,8 +405,15 @@ def admin_reset_password_view(request):
                 return redirect('admin_login')
             else:
                 messages.error(request, "Unable to find an account for the provided email.")
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, error)
+    else:
+        form = AdminResetPasswordForm()
 
     return render(request, 'core/admin_reset_password.html', {
+        'form': form,
         'email': email,
     })
 

@@ -1,7 +1,7 @@
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth.models import User
-from django.contrib.auth.hashers import check_password
+from django.contrib.auth.hashers import check_password, make_password
 from django.core import mail
 from core.models import CustomAdmin, Driver, Vehicle, Booking
 
@@ -181,13 +181,13 @@ class AdminLoginTests(TestCase):
         self.assertTrue(new_otp.isdigit())
 
     def test_admin_reset_password_after_otp_verification(self):
-        """Setting new password works after OTP verification."""
+        """Setting new password works after OTP verification and allows immediate login."""
         CustomAdmin.objects.create(
             full_name='OTP Reset User',
             username='otp_user',
             email='otpuser@taxi.com',
             phone='9811223344',
-            password='oldPasswordHash',
+            password=make_password('oldPasswordHash'),
         )
 
         # Initiate forgot password
@@ -208,6 +208,48 @@ class AdminLoginTests(TestCase):
 
         custom_admin = CustomAdmin.objects.get(email='otpuser@taxi.com')
         self.assertTrue(check_password('UpdatedPassword@2026', custom_admin.password))
+
+        # Test logging in with the newly reset password
+        login_res = self.client.post(reverse('admin_login'), {
+            'username': 'otp_user',
+            'password': 'UpdatedPassword@2026',
+        })
+        self.assertRedirects(login_res, reverse('admin_dashboard'))
+
+    def test_admin_reset_password_blocked_without_otp_verification(self):
+        """Direct access to reset password without verifying OTP is blocked."""
+        response = self.client.get(reverse('admin_reset_password'))
+        self.assertRedirects(response, reverse('admin_forgot_password'))
+
+    def test_admin_reset_password_validation_errors(self):
+        """Password reset rejects mismatch and passwords under 6 characters."""
+        CustomAdmin.objects.create(
+            full_name='Test Admin',
+            username='test_admin',
+            email='testadmin@taxi.com',
+            password=make_password('pass123'),
+        )
+        # Setup session as verified
+        session = self.client.session
+        session['reset_email'] = 'testadmin@taxi.com'
+        session['otp_verified'] = True
+        session.save()
+
+        # Mismatch
+        res_mismatch = self.client.post(reverse('admin_reset_password'), {
+            'new_password': 'Password123',
+            'confirm_password': 'PasswordDifferent',
+        })
+        self.assertEqual(res_mismatch.status_code, 200)
+        self.assertContains(res_mismatch, "Passwords do not match")
+
+        # Short password (< 6 chars)
+        res_short = self.client.post(reverse('admin_reset_password'), {
+            'new_password': '123',
+            'confirm_password': '123',
+        })
+        self.assertEqual(res_short.status_code, 200)
+        self.assertContains(res_short, "Password must be at least 6 characters long")
 
     def test_admin_login_page_renders(self):
         """Verify the login page renders with link to registration and forgot password."""

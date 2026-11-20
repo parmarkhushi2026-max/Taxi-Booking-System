@@ -172,3 +172,45 @@ class VerifyOTPForm(forms.Form):
             'style': 'letter-spacing: 8px;',
         })
     )
+
+
+class AdminResetPasswordForm(forms.Form):
+    """
+    Form to allow resetting admin password after OTP verification.
+    """
+    new_password = forms.CharField(
+        label="New Password",
+        min_length=6,
+        error_messages={'min_length': 'Password must be at least 6 characters long.'},
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control form-control-custom w-100',
+            'placeholder': 'Enter new password (min. 6 characters)',
+            'id': 'newPassword',
+            'autofocus': True,
+            'autocomplete': 'new-password',
+        })
+    )
+    confirm_password = forms.CharField(
+        label="Confirm New Password",
+        min_length=6,
+        error_messages={'min_length': 'Password must be at least 6 characters long.'},
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control form-control-custom w-100',
+            'placeholder': 'Re-enter new password to confirm',
+            'id': 'confirmPassword',
+            'autocomplete': 'new-password',
+        })
+    )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        new_password = cleaned_data.get('new_password')
+        confirm_password = cleaned_data.get('confirm_password')
+
+        if new_password and confirm_password:
+            if new_password != confirm_password:
+                raise ValidationError("Passwords do not match. Please verify both entries.")
+            if len(new_password) < 6:
+                raise ValidationError("Password must be at least 6 characters long.")
+        return cleaned_data
+

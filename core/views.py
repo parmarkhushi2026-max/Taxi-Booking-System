@@ -9,6 +9,8 @@ from django.contrib import messages
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils import timezone
 from django.db.models import Sum
+from django.core.mail import send_mail
+from django.conf import settings
 from .forms import (
     AdminLoginForm,
     AdminRegistrationForm,
@@ -16,6 +18,47 @@ from .forms import (
     VerifyOTPForm,
 )
 from .models import CustomAdmin, Driver, Vehicle, Booking
+
+
+def send_otp_via_console_email(target_email, otp):
+    """
+    Dispatches a formatted OTP recovery email to the console-based email backend.
+    The message prints directly to the running server terminal console.
+    """
+    subject = "Taxi Booking Admin - Password Reset OTP"
+    message = f"""============================================================
+TAXI BOOKING SYSTEM - ADMINISTRATOR PASSWORD RECOVERY
+============================================================
+Hello Administrator,
+
+A request was received to reset the password for your account:
+Email: {target_email}
+
+Your 6-Digit One-Time Password (OTP) is:
+------------------------------------------------------------
+>>> {otp} <<<
+------------------------------------------------------------
+
+Details:
+• Validity: 10 minutes
+• Method: Generated using Python random library
+• Backend: Django Console Email Backend
+• Destination: Printed directly to console / terminal
+
+If you did not request this, you can safely ignore this message.
+Your administrator credentials remain protected.
+
+Best regards,
+Taxi Booking Dispatch & Security Team
+============================================================"""
+    from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@taxibooking.com')
+    send_mail(
+        subject=subject,
+        message=message,
+        from_email=from_email,
+        recipient_list=[target_email],
+        fail_silently=False,
+    )
 
 
 def index(request):
@@ -221,6 +264,9 @@ def admin_forgot_password_view(request):
                 # Generate 6-digit secure OTP using Python random library
                 otp = f"{random.randint(100000, 999999)}"
 
+                # Dispatch OTP email to console backend
+                send_otp_via_console_email(target_email, otp)
+
                 # Store OTP and metadata in session
                 request.session['reset_email'] = target_email
                 request.session['reset_otp'] = otp
@@ -229,7 +275,7 @@ def admin_forgot_password_view(request):
 
                 messages.success(
                     request,
-                    f"A 6-digit OTP ({otp}) has been generated for {target_email} using the random library."
+                    f"A 6-digit OTP ({otp}) has been generated and dispatched via console-based email to {target_email}!"
                 )
                 return redirect('admin_verify_otp')
             else:
@@ -295,11 +341,15 @@ def admin_resend_otp_view(request):
 
     # Generate fresh OTP using random library
     new_otp = f"{random.randint(100000, 999999)}"
+
+    # Dispatch fresh OTP via console email backend
+    send_otp_via_console_email(email, new_otp)
+
     request.session['reset_otp'] = new_otp
     request.session['otp_timestamp'] = timezone.now().timestamp()
     request.session['otp_verified'] = False
 
-    messages.success(request, f"New 6-digit OTP ({new_otp}) generated successfully!")
+    messages.success(request, f"New 6-digit OTP ({new_otp}) dispatched via console-based email!")
     return redirect('admin_verify_otp')
 
 

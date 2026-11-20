@@ -2,6 +2,7 @@ from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import check_password
+from django.core import mail
 from core.models import CustomAdmin, Driver, Vehicle, Booking
 
 
@@ -122,7 +123,7 @@ class AdminLoginTests(TestCase):
         self.assertFalse(CustomAdmin.objects.filter(username='fail_admin').exists())
 
     def test_admin_forgot_password_generates_random_otp(self):
-        """Submitting email generates a 6-digit random OTP and redirects to verify."""
+        """Submitting email generates a 6-digit random OTP, sends console email, and redirects to verify."""
         response = self.client.post(reverse('admin_forgot_password'), {
             'email': 'admin@taxi.com',
         })
@@ -135,6 +136,12 @@ class AdminLoginTests(TestCase):
         self.assertEqual(len(otp), 6)
         self.assertTrue(otp.isdigit())
         self.assertTrue(100000 <= int(otp) <= 999999)
+
+        # Verify console-based email dispatch
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn(otp, mail.outbox[0].body)
+        self.assertEqual(mail.outbox[0].to, ['admin@taxi.com'])
+        self.assertIn("Password Reset OTP", mail.outbox[0].subject)
 
     def test_admin_verify_otp_valid_and_invalid(self):
         """Test verifying matching and non-matching OTP."""

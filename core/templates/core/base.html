@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Taxi Booking System{% endblock %}</title>
-    <!-- Google Fonts -->
+    <!-- Google Fonts: Plus Jakarta Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -17,18 +17,23 @@
             --taxi-yellow: #f59e0b;
             --taxi-yellow-hover: #d97706;
             --taxi-dark: #0f172a;
-            --taxi-card-bg: #1e293b;
+            --taxi-darker: #0b0f19;
+            --taxi-card-bg: rgba(30, 41, 59, 0.85);
             --taxi-border: #334155;
+            --taxi-border-light: rgba(255, 255, 255, 0.08);
             --taxi-text-muted: #94a3b8;
         }
 
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: #0b0f19;
+            background-color: var(--taxi-darker);
             color: #f8fafc;
             min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
+        /* Typography & Utility Helpers */
         .text-taxi-yellow {
             color: var(--taxi-yellow) !important;
         }
@@ -38,6 +43,7 @@
             color: #000 !important;
         }
 
+        /* Standard Buttons */
         .btn-taxi {
             background: linear-gradient(135deg, #f59e0b, #fbbf24);
             color: #0f172a;
@@ -53,18 +59,199 @@
             box-shadow: 0 8px 20px rgba(245, 158, 11, 0.35);
         }
 
+        .btn-outline-taxi {
+            border: 1px solid var(--taxi-yellow);
+            color: var(--taxi-yellow);
+            background: transparent;
+            font-weight: 600;
+            transition: all 0.25s ease;
+        }
+
+        .btn-outline-taxi:hover {
+            background: var(--taxi-yellow);
+            color: #0f172a;
+            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+        }
+
+        .btn-dark-custom {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #f8fafc;
+            border-radius: 10px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-dark-custom:hover, .btn-dark-custom:focus {
+            background: rgba(30, 41, 59, 1);
+            border-color: rgba(245, 158, 11, 0.4);
+            color: #f8fafc;
+        }
+
+        /* Standard Cards */
         .card-custom {
+            background: var(--taxi-card-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--taxi-border-light);
+            border-radius: 16px;
+        }
+
+        /* Standard Input Forms */
+        .form-control-custom {
+            background-color: #0f172a;
+            border: 1px solid #334155;
+            color: #f8fafc;
+            border-radius: 10px;
+            padding: 0.75rem 1rem 0.75rem 2.75rem;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+        }
+
+        .form-control-custom:focus {
+            background-color: #0f172a;
+            border-color: var(--taxi-yellow);
+            color: #f8fafc;
+            box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.15);
+        }
+
+        .form-select.form-control-custom {
+            padding-left: 2.75rem;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23f59e0b' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+        }
+
+        .input-group-custom {
+            position: relative;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #64748b;
+            font-size: 1.1rem;
+            pointer-events: none;
+            transition: color 0.2s;
+            z-index: 5;
+        }
+
+        .input-group-custom:focus-within .input-icon {
+            color: var(--taxi-yellow);
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #64748b;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            font-size: 1.1rem;
+            z-index: 5;
+            transition: color 0.2s;
+        }
+
+        .toggle-password:hover {
+            color: var(--taxi-yellow);
+        }
+
+        /* Standard Auth Layout Wrappers */
+        .auth-container, .login-container, .forgot-container, .verify-container, .reset-container {
+            min-height: calc(100vh - 70px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2.5rem 1rem;
+            background: radial-gradient(circle at 10% 20%, rgba(245, 158, 11, 0.12) 0%, transparent 40%),
+                        radial-gradient(circle at 90% 80%, rgba(59, 130, 246, 0.08) 0%, transparent 40%),
+                        var(--taxi-darker);
+        }
+
+        .auth-card, .login-card, .forgot-card, .verify-card, .reset-card {
+            width: 100%;
+            max-width: 460px;
+            padding: 2.5rem 2rem;
+            border-radius: 20px;
             background: rgba(30, 41, 59, 0.85);
             backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.65);
+        }
+
+        .taxi-logo-badge {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(245, 158, 11, 0.05));
+            border: 1px solid rgba(245, 158, 11, 0.35);
+            color: var(--taxi-yellow);
             border-radius: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin-bottom: 1.25rem;
+        }
+
+        /* Pulse Dot Animation */
+        .live-pulse {
+            width: 8px;
+            height: 8px;
+            background-color: #10b981;
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+            animation: pulse-ring 1.8s infinite;
+        }
+
+        @keyframes pulse-ring {
+            0% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+            }
+            70% {
+                transform: scale(1);
+                box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+            }
+            100% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+            }
+        }
+
+        /* Consistent Bootstrap Footer */
+        .app-footer {
+            background: rgba(11, 15, 25, 0.95);
+            backdrop-filter: blur(8px);
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            color: #94a3b8;
         }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
-<body>
-    {% block content %}
-    {% endblock %}
+<body class="d-flex flex-column min-vh-100">
+    <main class="flex-grow-1">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Consistent Bootstrap-styled App Footer -->
+    <footer class="app-footer py-3 mt-auto">
+        <div class="container-fluid px-4 d-flex flex-column flex-md-row justify-content-between align-items-center gap-2 small">
+            <div class="d-flex align-items-center gap-2">
+                <span class="text-warning fw-bold"><i class="bi bi-taxi-front-fill me-1"></i>Taxi Booking System</span>
+                <span class="text-secondary">&bull; Enterprise Fleet Portal</span>
+            </div>
+            <div class="d-flex align-items-center gap-3 text-secondary">
+                <span class="d-inline-flex align-items-center"><span class="live-pulse me-1.5"></span> Systems Online</span>
+                <span class="opacity-50">|</span>
+                <span class="badge bg-secondary bg-opacity-25 text-white-50 border border-secondary border-opacity-25 px-2 py-1">Secure TLS</span>
+                <span class="opacity-50">|</span>
+                <span>&copy; 2026 All Rights Reserved</span>
+            </div>
+        </div>
+    </footer>
 
     <!-- Bootstrap 5 JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

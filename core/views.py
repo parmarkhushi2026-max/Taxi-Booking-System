@@ -121,7 +121,7 @@ def admin_register_view(request):
         return redirect('admin_dashboard')
 
     if request.method == 'POST':
-        form = AdminRegistrationForm(request.POST)
+        form = AdminRegistrationForm(request.POST, request.FILES)
         if form.is_valid():
             raw_password = form.cleaned_data['password']
             custom_admin = form.save(commit=False)
@@ -422,12 +422,25 @@ def admin_reset_password_view(request):
 def admin_dashboard_view(request):
     """
     Basic Admin Dashboard protected view that loads after admin login.
-    Displays taxi booking metrics, recent trips, and driver statuses.
+    Displays taxi booking metrics, recent trips, driver statuses,
+    admin name, and admin profile image.
     """
     if not (request.user.is_staff or request.user.is_superuser):
         logout(request)
         messages.error(request, 'Session terminated: Administrator privileges required.')
         return redirect('admin_login')
+
+    # Fetch custom admin record if available
+    custom_admin = CustomAdmin.objects.filter(username__iexact=request.user.username).first()
+    if not custom_admin and request.user.email:
+        custom_admin = CustomAdmin.objects.filter(email__iexact=request.user.email).first()
+
+    # Determine admin details
+    admin_name = custom_admin.full_name if custom_admin else (request.user.get_full_name() or request.user.username)
+    admin_role = custom_admin.get_role_display() if custom_admin else ("Super Administrator" if request.user.is_superuser else "Administrator")
+    admin_email = custom_admin.email if custom_admin else (request.user.email or "admin@taxibooking.com")
+    admin_phone = custom_admin.phone if custom_admin else "Not specified"
+    admin_profile_image = custom_admin.profile_image.url if (custom_admin and custom_admin.profile_image) else None
 
     total_bookings = Booking.objects.count()
     active_rides = Booking.objects.filter(status__in=['ongoing', 'confirmed']).count()
@@ -441,6 +454,12 @@ def admin_dashboard_view(request):
     drivers = Driver.objects.all()[:5]
 
     context = {
+        'admin_name': admin_name,
+        'admin_role': admin_role,
+        'admin_email': admin_email,
+        'admin_phone': admin_phone,
+        'admin_profile_image': admin_profile_image,
+        'custom_admin': custom_admin,
         'total_bookings': total_bookings,
         'active_rides': active_rides,
         'available_drivers': available_drivers,

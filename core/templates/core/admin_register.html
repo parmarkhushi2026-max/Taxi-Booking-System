@@ -121,7 +121,7 @@
         {% endif %}
 
         <!-- Registration Form -->
-        <form method="POST" action="{% url 'admin_register' %}">
+        <form method="POST" action="{% url 'admin_register' %}" enctype="multipart/form-data">
             {% csrf_token %}
 
             <!-- Full Name -->
@@ -160,12 +160,21 @@
                 </div>
             </div>
 
-            <!-- Role Selection -->
-            <div class="mb-3">
-                <label for="adminRole" class="form-label small fw-semibold text-secondary mb-1">Administrative Role / Department</label>
-                <div class="position-relative input-group-custom">
-                    <i class="bi bi-shield-check input-icon"></i>
-                    {{ form.role }}
+            <!-- Role Selection & Profile Image in 2 cols -->
+            <div class="row g-2 mb-3">
+                <div class="col-sm-6">
+                    <label for="adminRole" class="form-label small fw-semibold text-secondary mb-1">Administrative Role</label>
+                    <div class="position-relative input-group-custom">
+                        <i class="bi bi-shield-check input-icon"></i>
+                        {{ form.role }}
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <label for="adminProfileImage" class="form-label small fw-semibold text-secondary mb-1">Profile Photo (Optional)</label>
+                    <div class="position-relative input-group-custom">
+                        <i class="bi bi-image input-icon"></i>
+                        {{ form.profile_image }}
+                    </div>
                 </div>
             </div>
 

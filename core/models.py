@@ -14,6 +14,7 @@ class CustomAdmin(models.Model):
     email = models.EmailField(unique=True)
     phone = models.CharField(max_length=15)
     role = models.CharField(max_length=30, choices=ROLE_CHOICES, default='fleet_manager')
+    profile_image = models.FileField(upload_to='admin_profiles/', null=True, blank=True)
     password = models.CharField(max_length=255)  # Stored securely hashed with make_password
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)

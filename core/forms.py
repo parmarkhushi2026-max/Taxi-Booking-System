@@ -90,6 +90,14 @@ class AdminRegistrationForm(forms.ModelForm):
             'id': 'adminRole',
         })
     )
+    profile_image = forms.FileField(
+        required=False,
+        widget=forms.FileInput(attrs={
+            'class': 'form-control form-control-custom w-100',
+            'id': 'adminProfileImage',
+            'accept': 'image/*',
+        })
+    )
     password = forms.CharField(
         widget=forms.PasswordInput(attrs={
             'class': 'form-control form-control-custom w-100',
@@ -109,7 +117,7 @@ class AdminRegistrationForm(forms.ModelForm):
 
     class Meta:
         model = CustomAdmin
-        fields = ['full_name', 'username', 'email', 'phone', 'role', 'password']
+        fields = ['full_name', 'username', 'email', 'phone', 'role', 'profile_image', 'password']
 
     def clean_username(self):
         username = self.cleaned_data.get('username', '').strip()

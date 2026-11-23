@@ -277,3 +277,24 @@ class AdminLoginTests(TestCase):
         self.client.login(username='superadmin', password='SecretPassword123')
         response = self.client.get(reverse('admin_logout'))
         self.assertRedirects(response, reverse('admin_login'))
+
+    def test_admin_dashboard_displays_admin_name_and_profile_image(self):
+        """Dashboard displays the authenticated admin full name and profile image."""
+        CustomAdmin.objects.create(
+            full_name='Vikramaditya Sharma',
+            username='vikram_admin',
+            email='vikram@taxibooking.com',
+            phone='9812345678',
+            role='fleet_manager',
+            password=make_password('Pass@1234'),
+        )
+        self.client.post(reverse('admin_login'), {
+            'username': 'vikram_admin',
+            'password': 'Pass@1234'
+        })
+        response = self.client.get(reverse('admin_dashboard'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Vikramaditya Sharma')
+        self.assertContains(response, 'admin-hero-avatar')
+        self.assertContains(response, 'admin-avatar-img')
+        self.assertContains(response, 'Fleet Manager')

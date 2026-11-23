@@ -117,6 +117,9 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
 
 # Email Configuration - Console Backend
 DEFAULT_FROM_EMAIL = 'Taxi Booking System <noreply@taxibooking.com>'

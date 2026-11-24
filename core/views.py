@@ -1,5 +1,5 @@
 import random
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.models import User
@@ -8,7 +8,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils import timezone
-from django.db.models import Sum
+from django.db.models import Sum, Q
 from django.core.mail import send_mail
 from django.conf import settings
 from .forms import (
@@ -17,6 +17,8 @@ from .forms import (
     AdminForgotPasswordForm,
     VerifyOTPForm,
     AdminResetPasswordForm,
+    AppUserCreateForm,
+    AppUserEditForm,
 )
 from .models import User as AppUser, CustomAdmin, Driver, Vehicle, Booking
 
@@ -509,27 +511,180 @@ def admin_drivers_view(request):
 @login_required(login_url='admin_login')
 def admin_users_view(request):
     """
-    Placeholder view for future Users & Customers module.
+    User Management and Listing page for Administrators.
+    Lists all app users / customers with search, filter, status toggles, edit, and delete capabilities.
     """
     if not (request.user.is_staff or request.user.is_superuser):
         logout(request)
         messages.error(request, 'Session terminated: Administrator privileges required.')
         return redirect('admin_login')
 
+    # Quick create modal submission
+    create_form = AppUserCreateForm()
+    if request.method == 'POST' and 'create_user_submit' in request.POST:
+        create_form = AppUserCreateForm(request.POST)
+        if create_form.is_valid():
+            new_user = create_form.save()
+            messages.success(request, f"User '{new_user.name}' ({new_user.email}) registered successfully!")
+            return redirect('admin_users')
+        else:
+            messages.error(request, "Failed to create user. Please check the highlighted errors.")
+
+    # Search & Filter parameters
+    search_query = request.GET.get('q', '').strip()
+    status_filter = request.GET.get('status', 'all').strip().lower()
+    sort_order = request.GET.get('sort', 'newest').strip().lower()
+
+    users_queryset = AppUser.objects.all()
+
+    if search_query:
+        users_queryset = users_queryset.filter(
+            Q(name__icontains=search_query) |
+            Q(email__icontains=search_query) |
+            Q(mobile__icontains=search_query)
+        )
+
+    if status_filter == 'active':
+        users_queryset = users_queryset.filter(is_active=True)
+    elif status_filter == 'disabled':
+        users_queryset = users_queryset.filter(is_active=False)
+
+    if sort_order == 'oldest':
+        users_queryset = users_queryset.order_by('created_at')
+    elif sort_order == 'name_asc':
+        users_queryset = users_queryset.order_by('name')
+    elif sort_order == 'name_desc':
+        users_queryset = users_queryset.order_by('-name')
+    else:  # default newest
+        users_queryset = users_queryset.order_by('-created_at')
+
     context = get_admin_context(request)
     context['active_nav'] = 'users'
-    context['module_title'] = 'Users & Customers'
+    context['module_title'] = 'Users & Customers Management'
     context['module_icon'] = 'bi-people-fill'
-    context['module_description'] = 'Overview of customer rider accounts, administrative staff credentials, contact details, and role permissions.'
-    context['total_custom_admins'] = CustomAdmin.objects.count()
+    context['module_description'] = 'Manage registered passenger accounts, edit contact details, toggle activation status, or safely remove user profiles.'
+
+    # Statistics
     context['total_app_users'] = AppUser.objects.count()
+    context['active_app_users'] = AppUser.objects.filter(is_active=True).count()
+    context['disabled_app_users'] = AppUser.objects.filter(is_active=False).count()
+    context['total_custom_admins'] = CustomAdmin.objects.count()
     context['total_system_users'] = User.objects.count()
     context['staff_count'] = User.objects.filter(is_staff=True).count()
+
+    # Listing context
+    context['app_users_list'] = users_queryset
+    context['filtered_count'] = users_queryset.count()
+    context['search_query'] = search_query
+    context['status_filter'] = status_filter
+    context['sort_order'] = sort_order
+    context['create_form'] = create_form
     context['custom_admins_list'] = CustomAdmin.objects.all()[:10]
-    context['app_users_list'] = AppUser.objects.all()[:10]
     context['system_users_list'] = User.objects.all()[:10]
 
     return render(request, 'core/admin_users.html', context)
+
+
+@login_required(login_url='admin_login')
+def admin_user_create_view(request):
+    """
+    Dedicated view to register a new App User.
+    """
+    if not (request.user.is_staff or request.user.is_superuser):
+        logout(request)
+        messages.error(request, 'Session terminated: Administrator privileges required.')
+        return redirect('admin_login')
+
+    if request.method == 'POST':
+        form = AppUserCreateForm(request.POST)
+        if form.is_valid():
+            new_user = form.save()
+            messages.success(request, f"User '{new_user.name}' ({new_user.email}) registered successfully!")
+            return redirect('admin_users')
+        else:
+            messages.error(request, "Failed to create user. Please correct the highlighted errors.")
+    else:
+        form = AppUserCreateForm()
+
+    context = get_admin_context(request)
+    context['active_nav'] = 'users'
+    context['form'] = form
+    return render(request, 'core/admin_user_create.html', context)
+
+
+@login_required(login_url='admin_login')
+def admin_user_edit_view(request, user_id):
+    """
+    Edit an existing App User (Name, Email, Mobile, Active Status, Optional Password change).
+    """
+    if not (request.user.is_staff or request.user.is_superuser):
+        logout(request)
+        messages.error(request, 'Session terminated: Administrator privileges required.')
+        return redirect('admin_login')
+
+    target_user = get_object_or_404(AppUser, pk=user_id)
+
+    if request.method == 'POST':
+        form = AppUserEditForm(request.POST, instance=target_user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f"User '{target_user.name}' updated successfully!")
+            return redirect('admin_users')
+        else:
+            messages.error(request, "Failed to update user. Please correct the highlighted errors.")
+    else:
+        form = AppUserEditForm(instance=target_user)
+
+    context = get_admin_context(request)
+    context['active_nav'] = 'users'
+    context['target_user'] = target_user
+    context['form'] = form
+    return render(request, 'core/admin_user_edit.html', context)
+
+
+@login_required(login_url='admin_login')
+def admin_user_delete_view(request, user_id):
+    """
+    Safely delete an App User from the database.
+    Accepts POST or confirmed GET.
+    """
+    if not (request.user.is_staff or request.user.is_superuser):
+        logout(request)
+        messages.error(request, 'Session terminated: Administrator privileges required.')
+        return redirect('admin_login')
+
+    target_user = get_object_or_404(AppUser, pk=user_id)
+    user_name = target_user.name
+    user_email = target_user.email
+
+    if request.method == 'POST' or request.GET.get('confirm') == 'yes':
+        target_user.delete()
+        messages.success(request, f"User '{user_name}' ({user_email}) has been permanently deleted.")
+        return redirect('admin_users')
+
+    context = get_admin_context(request)
+    context['active_nav'] = 'users'
+    context['target_user'] = target_user
+    return render(request, 'core/admin_user_confirm_delete.html', context)
+
+
+@login_required(login_url='admin_login')
+def admin_user_toggle_status_view(request, user_id):
+    """
+    Toggle an App User's is_active status (Active <-> Disabled).
+    """
+    if not (request.user.is_staff or request.user.is_superuser):
+        logout(request)
+        messages.error(request, 'Session terminated: Administrator privileges required.')
+        return redirect('admin_login')
+
+    target_user = get_object_or_404(AppUser, pk=user_id)
+    target_user.is_active = not target_user.is_active
+    target_user.save()
+
+    status_str = "activated" if target_user.is_active else "disabled"
+    messages.success(request, f"User '{target_user.name}' has been {status_str}.")
+    return redirect('admin_users')
 
 
 @login_required(login_url='admin_login')

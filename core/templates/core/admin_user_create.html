@@ -1,0 +1,164 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Register New User &bull; Taxi Booking Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+    .admin-navbar {
+        background: rgba(15, 23, 42, 0.95);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.4);
+    }
+
+    .nav-link-admin {
+        color: #94a3b8;
+        font-weight: 500;
+        font-size: 0.92rem;
+        padding: 0.5rem 0.85rem !important;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .nav-link-admin:hover {
+        color: #f8fafc;
+        background: rgba(255, 255, 255, 0.06);
+    }
+
+    .nav-link-admin.active {
+        color: #f59e0b;
+        background: rgba(245, 158, 11, 0.12);
+        font-weight: 600;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+{% include 'core/includes/admin_navbar.html' %}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-xl-7">
+            <!-- Messages Notifications -->
+            {% if messages %}
+                <div class="mb-4">
+                    {% for message in messages %}
+                        <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show rounded-3 shadow-sm d-flex align-items-center gap-2" role="alert">
+                            <i class="bi bi-info-circle-fill"></i>
+                            <div>{{ message }}</div>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <!-- Breadcrumb Navigation -->
+            <div class="d-flex align-items-center gap-2 mb-3">
+                <a href="{% url 'admin_dashboard' %}" class="text-secondary text-decoration-none small">
+                    <i class="bi bi-speedometer2 me-1"></i> Dashboard
+                </a>
+                <span class="text-secondary small">/</span>
+                <a href="{% url 'admin_users' %}" class="text-secondary text-decoration-none small">
+                    Users
+                </a>
+                <span class="text-secondary small">/</span>
+                <span class="text-warning small fw-semibold">Add User</span>
+            </div>
+
+            <div class="card-custom p-4 p-md-5">
+                <div class="d-flex align-items-center gap-3 pb-3 mb-4 border-bottom border-secondary border-opacity-25">
+                    <div class="stat-icon bg-warning bg-opacity-10 text-warning" style="width: 54px; height: 54px; border-radius: 16px; font-size: 1.6rem;">
+                        <i class="bi bi-person-plus-fill"></i>
+                    </div>
+                    <div>
+                        <h4 class="fw-bold text-white mb-1">Register New Passenger User</h4>
+                        <p class="text-secondary small mb-0">Create customer profile with contact credentials in taxi_users table.</p>
+                    </div>
+                </div>
+
+                <form method="POST" action="{% url 'admin_user_create' %}">
+                    {% csrf_token %}
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-12">
+                            <label class="form-label text-light fw-semibold small">Full Name <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-dark border-secondary text-secondary">
+                                    <i class="bi bi-person-fill"></i>
+                                </span>
+                                {{ form.name }}
+                            </div>
+                            {% if form.name.errors %}
+                                <div class="text-danger small mt-1">{{ form.name.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label text-light fw-semibold small">Email Address <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-dark border-secondary text-secondary">
+                                    <i class="bi bi-envelope-fill"></i>
+                                </span>
+                                {{ form.email }}
+                            </div>
+                            {% if form.email.errors %}
+                                <div class="text-danger small mt-1">{{ form.email.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label text-light fw-semibold small">Mobile Number <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-dark border-secondary text-secondary">
+                                    <i class="bi bi-telephone-fill"></i>
+                                </span>
+                                {{ form.mobile }}
+                            </div>
+                            {% if form.mobile.errors %}
+                                <div class="text-danger small mt-1">{{ form.mobile.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label text-light fw-semibold small">Password <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-dark border-secondary text-secondary">
+                                    <i class="bi bi-key-fill"></i>
+                                </span>
+                                {{ form.password }}
+                            </div>
+                            {% if form.password.errors %}
+                                <div class="text-danger small mt-1">{{ form.password.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-12 mt-3">
+                            <div class="p-3 rounded-3 bg-dark border border-secondary border-opacity-25 d-flex align-items-center justify-content-between">
+                                <div>
+                                    <div class="text-white fw-semibold small">Account Status</div>
+                                    <div class="text-secondary small" style="font-size: 0.8rem;">Active users are permitted to book rides and access portal.</div>
+                                </div>
+                                <div class="form-check form-switch fs-5 mb-0">
+                                    {{ form.is_active }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 pt-3 border-top border-secondary border-opacity-25">
+                        <a href="{% url 'admin_users' %}" class="btn btn-outline-secondary px-3">
+                            Cancel
+                        </a>
+                        <button type="submit" class="btn btn-taxi px-4 fw-semibold">
+                            <i class="bi bi-check-lg me-1"></i> Create User
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

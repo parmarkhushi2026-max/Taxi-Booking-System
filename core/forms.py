@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
-from .models import CustomAdmin
+from .models import CustomAdmin, User as AppUser
 
 
 class AdminLoginForm(AuthenticationForm):
@@ -221,4 +221,149 @@ class AdminResetPasswordForm(forms.Form):
             if len(new_password) < 6:
                 raise ValidationError("Password must be at least 6 characters long.")
         return cleaned_data
+
+
+class AppUserCreateForm(forms.ModelForm):
+    """
+    Form for Administrator to manually create a new App User / Rider.
+    """
+    name = forms.CharField(
+        max_length=150,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control form-control-custom w-100',
+            'placeholder': 'Full Name (e.g. Ramesh Kumar)',
+            'id': 'userName',
+        })
+    )
+    email = forms.EmailField(
+        widget=forms.EmailInput(attrs={
+            'class': 'form-control form-control-custom w-100',
+            'placeholder': 'user@example.com',
+            'id': 'userEmail',
+        })
+    )
+    mobile = forms.CharField(
+        max_length=15,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control form-control-custom w-100',
+            'placeholder': '+91 98765 43210',
+            'id': 'userMobile',
+        })
+    )
+    password = forms.CharField(
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control form-control-custom w-100',
+            'placeholder': 'Enter initial password',
+            'id': 'userPassword',
+        })
+    )
+    is_active = forms.BooleanField(
+        required=False,
+        initial=True,
+        widget=forms.CheckboxInput(attrs={
+            'class': 'form-check-input',
+            'id': 'userIsActive',
+        })
+    )
+
+    class Meta:
+        model = AppUser
+        fields = ['name', 'email', 'mobile', 'password', 'is_active']
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email', '').strip().lower()
+        if AppUser.objects.filter(email__iexact=email).exists():
+            raise ValidationError("A user with this email address already exists.")
+        return email
+
+    def clean_mobile(self):
+        mobile = self.cleaned_data.get('mobile', '').strip()
+        if AppUser.objects.filter(mobile=mobile).exists():
+            raise ValidationError("A user with this mobile number already exists.")
+        return mobile
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.set_password(self.cleaned_data['password'])
+        if commit:
+            user.save()
+        return user
+
+
+class AppUserEditForm(forms.ModelForm):
+    """
+    Form for Administrator to edit an existing App User / Rider.
+    Allows updating name, email, mobile, is_active status, and optional new password.
+    """
+    name = forms.CharField(
+        max_length=150,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control form-control-custom w-100',
+            'placeholder': 'Full Name',
+            'id': 'editUserName',
+        })
+    )
+    email = forms.EmailField(
+        widget=forms.EmailInput(attrs={
+            'class': 'form-control form-control-custom w-100',
+            'placeholder': 'user@example.com',
+            'id': 'editUserEmail',
+        })
+    )
+    mobile = forms.CharField(
+        max_length=15,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control form-control-custom w-100',
+            'placeholder': '+91 98765 43210',
+            'id': 'editUserMobile',
+        })
+    )
+    new_password = forms.CharField(
+        required=False,
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control form-control-custom w-100',
+            'placeholder': 'Leave blank to keep existing password',
+            'id': 'editUserPassword',
+        }),
+        help_text="Leave blank if you do not want to change the user's password."
+    )
+    is_active = forms.BooleanField(
+        required=False,
+        widget=forms.CheckboxInput(attrs={
+            'class': 'form-check-input',
+            'id': 'editUserIsActive',
+        })
+    )
+
+    class Meta:
+        model = AppUser
+        fields = ['name', 'email', 'mobile', 'is_active']
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email', '').strip().lower()
+        query = AppUser.objects.filter(email__iexact=email)
+        if self.instance and self.instance.pk:
+            query = query.exclude(pk=self.instance.pk)
+        if query.exists():
+            raise ValidationError("A user with this email address already exists.")
+        return email
+
+    def clean_mobile(self):
+        mobile = self.cleaned_data.get('mobile', '').strip()
+        query = AppUser.objects.filter(mobile=mobile)
+        if self.instance and self.instance.pk:
+            query = query.exclude(pk=self.instance.pk)
+        if query.exists():
+            raise ValidationError("A user with this mobile number already exists.")
+        return mobile
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        new_password = self.cleaned_data.get('new_password')
+        if new_password:
+            user.set_password(new_password)
+        if commit:
+            user.save()
+        return user
+
 

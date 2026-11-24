@@ -397,3 +397,110 @@ class AdminLoginTests(TestCase):
         self.assertContains(response, 'Kavita Joshi')
         self.assertContains(response, 'kavita@taxiapp.com')
         self.assertContains(response, '9822334455')
+
+    def test_admin_user_listing_has_edit_and_delete_options(self):
+        """User listing page provides edit and delete action options for each user."""
+        user = AppUser.objects.create(
+            name='Rahul Verma',
+            email='rahul@taxiapp.com',
+            mobile='9871122334',
+            password=make_password('SecurePass123'),
+        )
+        self.client.login(username='superadmin', password='SecretPassword123')
+        response = self.client.get(reverse('admin_users'))
+        self.assertEqual(response.status_code, 200)
+        edit_url = reverse('admin_user_edit', args=[user.id])
+        delete_url = reverse('admin_user_delete', args=[user.id])
+        self.assertContains(response, edit_url)
+        self.assertContains(response, delete_url)
+        self.assertContains(response, 'Edit')
+        self.assertContains(response, 'Delete')
+
+    def test_admin_user_edit_view_get_and_post(self):
+        """Admin can load edit page and update user details including name, mobile, and password."""
+        user = AppUser.objects.create(
+            name='Sneha Kapoor',
+            email='sneha@taxiapp.com',
+            mobile='9811122334',
+            password=make_password('OldPassword123'),
+        )
+        self.client.login(username='superadmin', password='SecretPassword123')
+
+        # GET edit view
+        edit_url = reverse('admin_user_edit', args=[user.id])
+        get_response = self.client.get(edit_url)
+        self.assertEqual(get_response.status_code, 200)
+        self.assertContains(get_response, 'Sneha Kapoor')
+        self.assertContains(get_response, 'sneha@taxiapp.com')
+
+        # POST update
+        post_response = self.client.post(edit_url, {
+            'name': 'Sneha Malhotra',
+            'email': 'sneha.m@taxiapp.com',
+            'mobile': '9899988877',
+            'is_active': True,
+            'new_password': 'NewPassword456',
+        }, follow=True)
+        self.assertEqual(post_response.status_code, 200)
+
+        user.refresh_from_db()
+        self.assertEqual(user.name, 'Sneha Malhotra')
+        self.assertEqual(user.email, 'sneha.m@taxiapp.com')
+        self.assertEqual(user.mobile, '9899988877')
+        self.assertTrue(user.check_password('NewPassword456'))
+
+    def test_admin_user_delete_view_post(self):
+        """Admin can permanently delete an AppUser record."""
+        user = AppUser.objects.create(
+            name='Temporary User',
+            email='temp@taxiapp.com',
+            mobile='9000000001',
+            password=make_password('Pass123'),
+        )
+        user_id = user.id
+        self.client.login(username='superadmin', password='SecretPassword123')
+
+        delete_url = reverse('admin_user_delete', args=[user_id])
+        response = self.client.post(delete_url, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(AppUser.objects.filter(pk=user_id).exists())
+
+    def test_admin_user_toggle_status_view(self):
+        """Admin can toggle is_active status of a user."""
+        user = AppUser.objects.create(
+            name='Toggle User',
+            email='toggle@taxiapp.com',
+            mobile='9000000002',
+            password=make_password('Pass123'),
+            is_active=True,
+        )
+        self.client.login(username='superadmin', password='SecretPassword123')
+
+        toggle_url = reverse('admin_user_toggle_status', args=[user.id])
+        response = self.client.get(toggle_url, follow=True)
+        self.assertEqual(response.status_code, 200)
+        user.refresh_from_db()
+        self.assertFalse(user.is_active)
+
+        # Toggle back to active
+        response = self.client.get(toggle_url, follow=True)
+        self.assertEqual(response.status_code, 200)
+        user.refresh_from_db()
+        self.assertTrue(user.is_active)
+
+    def test_admin_user_search_and_filter(self):
+        """Search query filters users by name, email, or mobile."""
+        AppUser.objects.create(name='Mohit Sharma', email='mohit@search.com', mobile='9111122223', password='pass')
+        AppUser.objects.create(name='Geeta Patel', email='geeta@search.com', mobile='9333344445', password='pass')
+
+        self.client.login(username='superadmin', password='SecretPassword123')
+
+        # Search for Mohit
+        response = self.client.get(reverse('admin_users') + '?q=mohit')
+        self.assertContains(response, 'Mohit Sharma')
+        self.assertNotContains(response, 'Geeta Patel')
+
+        # Search by phone number
+        response = self.client.get(reverse('admin_users') + '?q=9333344445')
+        self.assertContains(response, 'Geeta Patel')
+        self.assertNotContains(response, 'Mohit Sharma')

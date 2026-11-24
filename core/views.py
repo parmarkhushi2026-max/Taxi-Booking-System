@@ -418,6 +418,30 @@ def admin_reset_password_view(request):
     })
 
 
+def get_admin_context(request):
+    """
+    Helper function to extract authenticated administrator profile details.
+    """
+    custom_admin = CustomAdmin.objects.filter(username__iexact=request.user.username).first()
+    if not custom_admin and request.user.email:
+        custom_admin = CustomAdmin.objects.filter(email__iexact=request.user.email).first()
+
+    admin_name = custom_admin.full_name if custom_admin else (request.user.get_full_name() or request.user.username)
+    admin_role = custom_admin.get_role_display() if custom_admin else ("Super Administrator" if request.user.is_superuser else "Administrator")
+    admin_email = custom_admin.email if custom_admin else (request.user.email or "admin@taxibooking.com")
+    admin_phone = custom_admin.phone if custom_admin else "Not specified"
+    admin_profile_image = custom_admin.profile_image.url if (custom_admin and custom_admin.profile_image) else None
+
+    return {
+        'admin_name': admin_name,
+        'admin_role': admin_role,
+        'admin_email': admin_email,
+        'admin_phone': admin_phone,
+        'admin_profile_image': admin_profile_image,
+        'custom_admin': custom_admin,
+    }
+
+
 @login_required(login_url='admin_login')
 def admin_dashboard_view(request):
     """
@@ -430,17 +454,8 @@ def admin_dashboard_view(request):
         messages.error(request, 'Session terminated: Administrator privileges required.')
         return redirect('admin_login')
 
-    # Fetch custom admin record if available
-    custom_admin = CustomAdmin.objects.filter(username__iexact=request.user.username).first()
-    if not custom_admin and request.user.email:
-        custom_admin = CustomAdmin.objects.filter(email__iexact=request.user.email).first()
-
-    # Determine admin details
-    admin_name = custom_admin.full_name if custom_admin else (request.user.get_full_name() or request.user.username)
-    admin_role = custom_admin.get_role_display() if custom_admin else ("Super Administrator" if request.user.is_superuser else "Administrator")
-    admin_email = custom_admin.email if custom_admin else (request.user.email or "admin@taxibooking.com")
-    admin_phone = custom_admin.phone if custom_admin else "Not specified"
-    admin_profile_image = custom_admin.profile_image.url if (custom_admin and custom_admin.profile_image) else None
+    context = get_admin_context(request)
+    context['active_nav'] = 'dashboard'
 
     total_bookings = Booking.objects.count()
     active_rides = Booking.objects.filter(status__in=['ongoing', 'confirmed']).count()
@@ -453,13 +468,7 @@ def admin_dashboard_view(request):
     recent_bookings = Booking.objects.all()[:8]
     drivers = Driver.objects.all()[:5]
 
-    context = {
-        'admin_name': admin_name,
-        'admin_role': admin_role,
-        'admin_email': admin_email,
-        'admin_phone': admin_phone,
-        'admin_profile_image': admin_profile_image,
-        'custom_admin': custom_admin,
+    context.update({
         'total_bookings': total_bookings,
         'active_rides': active_rides,
         'available_drivers': available_drivers,
@@ -468,9 +477,82 @@ def admin_dashboard_view(request):
         'total_revenue': total_revenue,
         'recent_bookings': recent_bookings,
         'drivers': drivers,
-    }
+    })
 
     return render(request, 'core/admin_dashboard.html', context)
+
+
+@login_required(login_url='admin_login')
+def admin_drivers_view(request):
+    """
+    Placeholder view for future Drivers Management module.
+    """
+    if not (request.user.is_staff or request.user.is_superuser):
+        logout(request)
+        messages.error(request, 'Session terminated: Administrator privileges required.')
+        return redirect('admin_login')
+
+    context = get_admin_context(request)
+    context['active_nav'] = 'drivers'
+    context['module_title'] = 'Drivers Management'
+    context['module_icon'] = 'bi-person-badge-fill'
+    context['module_description'] = 'Manage taxi fleet chauffeurs, verify driver licenses, track live shift statuses, and handle payouts.'
+    context['total_drivers'] = Driver.objects.count()
+    context['available_drivers'] = Driver.objects.filter(status='available').count()
+    context['on_trip_drivers'] = Driver.objects.filter(status='on_trip').count()
+    context['offline_drivers'] = Driver.objects.filter(status='offline').count()
+    context['drivers_list'] = Driver.objects.all()[:10]
+
+    return render(request, 'core/admin_drivers.html', context)
+
+
+@login_required(login_url='admin_login')
+def admin_users_view(request):
+    """
+    Placeholder view for future Users & Customers module.
+    """
+    if not (request.user.is_staff or request.user.is_superuser):
+        logout(request)
+        messages.error(request, 'Session terminated: Administrator privileges required.')
+        return redirect('admin_login')
+
+    context = get_admin_context(request)
+    context['active_nav'] = 'users'
+    context['module_title'] = 'Users & Customers'
+    context['module_icon'] = 'bi-people-fill'
+    context['module_description'] = 'Overview of customer rider accounts, administrative staff credentials, contact details, and role permissions.'
+    context['total_custom_admins'] = CustomAdmin.objects.count()
+    context['total_system_users'] = User.objects.count()
+    context['staff_count'] = User.objects.filter(is_staff=True).count()
+    context['custom_admins_list'] = CustomAdmin.objects.all()[:10]
+    context['system_users_list'] = User.objects.all()[:10]
+
+    return render(request, 'core/admin_users.html', context)
+
+
+@login_required(login_url='admin_login')
+def admin_bookings_view(request):
+    """
+    Placeholder view for future Bookings & Dispatch module.
+    """
+    if not (request.user.is_staff or request.user.is_superuser):
+        logout(request)
+        messages.error(request, 'Session terminated: Administrator privileges required.')
+        return redirect('admin_login')
+
+    context = get_admin_context(request)
+    context['active_nav'] = 'bookings'
+    context['module_title'] = 'Bookings & Dispatch'
+    context['module_icon'] = 'bi-journal-bookmark-fill'
+    context['module_description'] = 'Track passenger trip bookings, dispatch cabs, monitor completed rides, and calculate fare payments.'
+    context['total_bookings'] = Booking.objects.count()
+    context['pending_bookings'] = Booking.objects.filter(status='pending').count()
+    context['active_rides'] = Booking.objects.filter(status__in=['ongoing', 'confirmed']).count()
+    context['completed_bookings'] = Booking.objects.filter(status='completed').count()
+    context['cancelled_bookings'] = Booking.objects.filter(status='cancelled').count()
+    context['bookings_list'] = Booking.objects.all()[:10]
+
+    return render(request, 'core/admin_bookings.html', context)
 
 
 def admin_logout_view(request):

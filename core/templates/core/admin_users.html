@@ -1,0 +1,254 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Users Module &bull; Taxi Booking Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+    .admin-navbar {
+        background: rgba(15, 23, 42, 0.95);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.4);
+    }
+
+    .nav-link-admin {
+        color: #94a3b8;
+        font-weight: 500;
+        font-size: 0.92rem;
+        padding: 0.5rem 0.85rem !important;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .nav-link-admin:hover {
+        color: #f8fafc;
+        background: rgba(255, 255, 255, 0.06);
+    }
+
+    .nav-link-admin.active {
+        color: #f59e0b;
+        background: rgba(245, 158, 11, 0.12);
+        font-weight: 600;
+    }
+
+    .navbar-toggler-admin {
+        border: 1px solid rgba(245, 158, 11, 0.35) !important;
+        border-radius: 10px;
+        background: rgba(245, 158, 11, 0.08);
+        transition: all 0.2s ease;
+    }
+
+    .user-avatar-badge {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .admin-avatar-img {
+        width: 38px;
+        height: 38px;
+        object-fit: cover;
+        border: 2px solid #f59e0b;
+        background-color: #1e293b;
+    }
+
+    .avatar-online-dot {
+        position: absolute;
+        bottom: 0px;
+        right: 0px;
+        width: 11px;
+        height: 11px;
+        background-color: #10b981;
+        border: 2px solid #0f172a;
+        border-radius: 50%;
+    }
+
+    .stat-card {
+        background: rgba(30, 41, 59, 0.7);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 16px;
+        padding: 1.5rem;
+        transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-3px);
+        border-color: rgba(245, 158, 11, 0.4);
+    }
+
+    .stat-icon {
+        width: 52px;
+        height: 52px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.6rem;
+    }
+
+    .placeholder-badge {
+        background: rgba(59, 130, 246, 0.15);
+        color: #60a5fa;
+        border: 1px dashed rgba(59, 130, 246, 0.4);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+{% include 'core/includes/admin_navbar.html' %}
+
+<div class="container-fluid px-4 py-4">
+    <!-- Breadcrumb & Back button -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <a href="{% url 'admin_dashboard' %}" class="text-secondary text-decoration-none small">
+                    <i class="bi bi-arrow-left me-1"></i> Dashboard
+                </a>
+                <span class="text-secondary small">/</span>
+                <span class="text-info small fw-semibold">Users Module</span>
+            </div>
+            <h2 class="fw-bold text-white mb-0 d-flex align-items-center gap-2">
+                <i class="bi bi-people-fill text-info"></i> Users & Accounts
+                <span class="badge placeholder-badge fs-6 rounded-pill">Placeholder View</span>
+            </h2>
+            <p class="text-secondary small mt-1 mb-0">{{ module_description }}</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'admin_dashboard' %}" class="btn btn-outline-secondary btn-sm px-3">
+                <i class="bi bi-speedometer2 me-1"></i> Return to Dashboard
+            </a>
+            <a href="{% url 'admin_register' %}" class="btn btn-taxi btn-sm px-3">
+                <i class="bi bi-person-plus-fill me-1"></i> Register New Admin
+            </a>
+        </div>
+    </div>
+
+    <!-- Alert Banner / Roadmap Notice -->
+    <div class="alert alert-info bg-info bg-opacity-10 border border-info border-opacity-25 rounded-4 p-3 mb-4 d-flex align-items-start gap-3">
+        <i class="bi bi-person-gear fs-3 text-info"></i>
+        <div>
+            <h6 class="fw-bold text-info mb-1">Users & Customer Management In Progress</h6>
+            <p class="small text-secondary mb-2">
+                This is the dedicated placeholder view for the <strong>Users Module</strong>. You can view all registered system administrators, passenger profiles, and authentication credentials.
+            </p>
+            <div class="d-flex flex-wrap gap-2">
+                <span class="badge bg-dark border border-secondary text-light small"><i class="bi bi-person-vcard me-1 text-warning"></i> Customer Profile KYC</span>
+                <span class="badge bg-dark border border-secondary text-light small"><i class="bi bi-shield-lock me-1 text-success"></i> RBAC Role Permissions</span>
+                <span class="badge bg-dark border border-secondary text-light small"><i class="bi bi-wallet2 me-1 text-info"></i> In-App Rider Wallet</span>
+                <span class="badge bg-dark border border-secondary text-light small"><i class="bi bi-activity me-1 text-danger"></i> User Login Activity Audit</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stat Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-xl-4">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-secondary small fw-medium">Custom Admins</div>
+                        <div class="fs-2 fw-bold text-warning mt-1">{{ total_custom_admins }}</div>
+                        <div class="small text-secondary mt-1"><i class="bi bi-shield-check me-1"></i>Custom admin table</div>
+                    </div>
+                    <div class="stat-icon bg-warning bg-opacity-10 text-warning">
+                        <i class="bi bi-person-badge-fill"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-4">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-secondary small fw-medium">Auth Users</div>
+                        <div class="fs-2 fw-bold text-info mt-1">{{ total_system_users }}</div>
+                        <div class="small text-info mt-1"><i class="bi bi-people-fill me-1"></i>Django user table</div>
+                    </div>
+                    <div class="stat-icon bg-info bg-opacity-10 text-info">
+                        <i class="bi bi-person-lines-fill"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-4">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-secondary small fw-medium">Staff Members</div>
+                        <div class="fs-2 fw-bold text-success mt-1">{{ staff_count }}</div>
+                        <div class="small text-success mt-1"><i class="bi bi-shield-lock me-1"></i>Privileged access</div>
+                    </div>
+                    <div class="stat-icon bg-success bg-opacity-10 text-success">
+                        <i class="bi bi-person-check-fill"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Admins Table Preview -->
+    <div class="card-custom p-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h5 class="fw-bold mb-0 text-white">Registered Custom Administrators</h5>
+                <p class="text-secondary small mb-0">Records in custom_admin_users database table</p>
+            </div>
+            <a href="/admin/core/customadmin/" target="_blank" class="btn btn-outline-info btn-sm">
+                Open in Django DB <i class="bi bi-box-arrow-up-right ms-1"></i>
+            </a>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-dark table-hover mb-0" style="--bs-table-bg: transparent;">
+                <thead>
+                    <tr class="text-secondary small border-bottom border-secondary border-opacity-25">
+                        <th>Full Name</th>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for a in custom_admins_list %}
+                        <tr class="align-middle border-bottom border-secondary border-opacity-25">
+                            <td class="fw-semibold text-white">
+                                <i class="bi bi-person-fill text-warning me-1.5"></i> {{ a.full_name }}
+                            </td>
+                            <td><code class="text-warning small">@{{ a.username }}</code></td>
+                            <td class="text-secondary small">{{ a.email }}</td>
+                            <td class="text-secondary small">{{ a.phone }}</td>
+                            <td>
+                                <span class="badge bg-primary bg-opacity-15 text-primary border border-primary border-opacity-25 px-2 py-1">
+                                    {{ a.get_role_display }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if a.is_active %}
+                                    <span class="badge bg-success bg-opacity-15 text-success border border-success border-opacity-25 px-2 py-1">Active</span>
+                                {% else %}
+                                    <span class="badge bg-danger bg-opacity-15 text-danger border border-danger border-opacity-25 px-2 py-1">Inactive</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-secondary">
+                                No custom administrators found in database.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

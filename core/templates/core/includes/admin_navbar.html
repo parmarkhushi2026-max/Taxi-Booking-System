@@ -1,0 +1,65 @@
+<!-- Responsive Admin Navbar -->
+<nav class="navbar navbar-expand-lg admin-navbar sticky-top py-2.5">
+    <div class="container-fluid px-3 px-lg-4">
+        <!-- Brand & Logo -->
+        <a class="navbar-brand d-flex align-items-center text-white fw-bold me-lg-4" href="{% url 'admin_dashboard' %}">
+            <span class="bg-taxi-yellow p-2 rounded-3 me-2 d-inline-flex align-items-center justify-content-center shadow-sm" style="width: 38px; height: 38px;">
+                <i class="bi bi-taxi-front-fill fs-5 text-dark"></i>
+            </span>
+            <div class="d-flex flex-column">
+                <span class="lh-1">Taxi Booking</span>
+                <span class="badge bg-warning text-dark mt-1 fw-bold align-self-start" style="font-size: 0.62rem; letter-spacing: 0.5px;">ADMIN PORTAL</span>
+            </div>
+        </a>
+
+        <!-- Mobile Hamburger Toggler Button -->
+        <button class="navbar-toggler navbar-toggler-admin border-0 p-2" type="button" data-bs-toggle="collapse" data-bs-target="#adminNavbarNav" aria-controls="adminNavbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-list text-warning fs-2"></i>
+        </button>
+
+        <!-- Collapsible Content -->
+        <div class="collapse navbar-collapse" id="adminNavbarNav">
+            <!-- Navigation Links: Drivers, Users, Bookings -->
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0 gap-lg-2 mt-3 mt-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link nav-link-admin {% if active_nav == 'drivers' %}active{% endif %}" href="{% url 'admin_drivers' %}">
+                        <i class="bi bi-person-badge-fill me-1.5 text-warning"></i> Drivers
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link nav-link-admin {% if active_nav == 'users' %}active{% endif %}" href="{% url 'admin_users' %}">
+                        <i class="bi bi-people-fill me-1.5 text-info"></i> Users
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link nav-link-admin {% if active_nav == 'bookings' %}active{% endif %}" href="{% url 'admin_bookings' %}">
+                        <i class="bi bi-journal-bookmark-fill me-1.5 text-success"></i> Bookings
+                    </a>
+                </li>
+            </ul>
+
+            <!-- Right-Hand Controls: Admin Badge & Logout Option -->
+            <div class="d-flex flex-column flex-lg-row align-items-lg-center gap-3 pt-3 pt-lg-0 border-top border-lg-0 border-secondary border-opacity-25">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="user-avatar-badge position-relative">
+                        {% if admin_profile_image %}
+                            <img src="{{ admin_profile_image }}" alt="{{ admin_name }}" class="admin-avatar-img rounded-circle">
+                        {% else %}
+                            <img src="https://ui-avatars.com/api/?name={{ admin_name|urlencode }}&background=f59e0b&color=0f172a&bold=true" alt="{{ admin_name }}" class="admin-avatar-img rounded-circle">
+                        {% endif %}
+                        <span class="avatar-online-dot"></span>
+                    </div>
+                    <div class="d-flex flex-column">
+                        <span class="fw-semibold text-white small lh-1">{{ admin_name }}</span>
+                        <span class="text-secondary" style="font-size: 0.72rem;">{{ admin_role }}</span>
+                    </div>
+                </div>
+
+                <!-- Logout Option -->
+                <a href="{% url 'admin_logout' %}" class="btn btn-outline-danger btn-sm d-inline-flex align-items-center justify-content-center px-3 py-1.5">
+                    <i class="bi bi-box-arrow-right me-1.5"></i> Logout
+                </a>
+            </div>
+        </div>
+    </div>
+</nav>

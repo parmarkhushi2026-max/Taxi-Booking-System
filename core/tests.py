@@ -298,3 +298,35 @@ class AdminLoginTests(TestCase):
         self.assertContains(response, 'admin-hero-avatar')
         self.assertContains(response, 'admin-avatar-img')
         self.assertContains(response, 'Fleet Manager')
+
+    def test_unauthenticated_user_redirected_from_placeholder_modules(self):
+        """Unauthenticated requests to placeholder modules redirect to login."""
+        for route in ['admin_drivers', 'admin_users', 'admin_bookings']:
+            res = self.client.get(reverse(route))
+            self.assertRedirects(res, f"{reverse('admin_login')}?next={reverse(route)}")
+
+    def test_admin_drivers_placeholder_view(self):
+        """Authenticated admin can view the Drivers placeholder page."""
+        self.client.login(username='superadmin', password='SecretPassword123')
+        response = self.client.get(reverse('admin_drivers'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Drivers Management')
+        self.assertContains(response, 'Registered Drivers List')
+        self.assertContains(response, 'Test Driver')
+
+    def test_admin_users_placeholder_view(self):
+        """Authenticated admin can view the Users placeholder page."""
+        self.client.login(username='superadmin', password='SecretPassword123')
+        response = self.client.get(reverse('admin_users'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Users & Accounts')
+        self.assertContains(response, 'Registered Custom Administrators')
+
+    def test_admin_bookings_placeholder_view(self):
+        """Authenticated admin can view the Bookings placeholder page."""
+        self.client.login(username='superadmin', password='SecretPassword123')
+        response = self.client.get(reverse('admin_bookings'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Bookings & Dispatch')
+        self.assertContains(response, 'Recent Passenger Bookings')
+        self.assertContains(response, 'Test Customer')

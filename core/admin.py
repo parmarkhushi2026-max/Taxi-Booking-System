@@ -1,5 +1,13 @@
 from django.contrib import admin
-from .models import CustomAdmin, Driver, Vehicle, Booking
+from .models import User, CustomAdmin, Driver, Vehicle, Booking
+
+
+@admin.register(User)
+class UserAdmin(admin.ModelAdmin):
+    list_display = ('name', 'email', 'mobile', 'is_active', 'created_at')
+    list_filter = ('is_active', 'created_at')
+    search_fields = ('name', 'email', 'mobile')
+    readonly_fields = ('created_at', 'updated_at')
 
 
 @admin.register(CustomAdmin)

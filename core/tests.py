@@ -3,7 +3,8 @@ from django.urls import reverse
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import check_password, make_password
 from django.core import mail
-from core.models import CustomAdmin, Driver, Vehicle, Booking
+from django.db import IntegrityError, transaction
+from core.models import User as AppUser, CustomAdmin, Driver, Vehicle, Booking
 
 
 class AdminLoginTests(TestCase):
@@ -330,3 +331,69 @@ class AdminLoginTests(TestCase):
         self.assertContains(response, 'Bookings & Dispatch')
         self.assertContains(response, 'Recent Passenger Bookings')
         self.assertContains(response, 'Test Customer')
+
+    def test_user_model_creation_and_fields(self):
+        """Create a User instance with name, email, mobile, password."""
+        user = AppUser.objects.create(
+            name='Aarav Mehta',
+            email='aarav@example.com',
+            mobile='9876543210',
+            password=make_password('UserSecurePass!'),
+        )
+        self.assertEqual(user.name, 'Aarav Mehta')
+        self.assertEqual(user.email, 'aarav@example.com')
+        self.assertEqual(user.mobile, '9876543210')
+        self.assertTrue(user.is_active)
+        self.assertEqual(str(user), 'Aarav Mehta (aarav@example.com)')
+        self.assertTrue(user.check_password('UserSecurePass!'))
+        self.assertFalse(user.check_password('WrongPass'))
+
+    def test_user_password_hashing_helpers(self):
+        """User model set_password and check_password helper methods work."""
+        user = AppUser(name='Priya Sharma', email='priya@example.com', mobile='9123456789')
+        user.set_password('MySecret@2026')
+        user.save()
+        self.assertTrue(user.check_password('MySecret@2026'))
+        self.assertFalse(user.check_password('Incorrect'))
+
+    def test_user_model_unique_constraints(self):
+        """User email and mobile must be unique."""
+        AppUser.objects.create(
+            name='First User',
+            email='unique@example.com',
+            mobile='9991112222',
+            password=make_password('pass1'),
+        )
+        # Duplicate email
+        with transaction.atomic():
+            with self.assertRaises(IntegrityError):
+                AppUser.objects.create(
+                    name='Second User',
+                    email='unique@example.com',
+                    mobile='9993334444',
+                    password=make_password('pass2'),
+                )
+        # Duplicate mobile
+        with transaction.atomic():
+            with self.assertRaises(IntegrityError):
+                AppUser.objects.create(
+                    name='Third User',
+                    email='another@example.com',
+                    mobile='9991112222',
+                    password=make_password('pass3'),
+                )
+
+    def test_admin_users_view_displays_registered_app_users(self):
+        """Users dashboard module displays registered AppUser records."""
+        AppUser.objects.create(
+            name='Kavita Joshi',
+            email='kavita@taxiapp.com',
+            mobile='9822334455',
+            password=make_password('KavitaPass123'),
+        )
+        self.client.login(username='superadmin', password='SecretPassword123')
+        response = self.client.get(reverse('admin_users'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Kavita Joshi')
+        self.assertContains(response, 'kavita@taxiapp.com')
+        self.assertContains(response, '9822334455')

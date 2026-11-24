@@ -149,7 +149,21 @@
 
     <!-- Stat Cards -->
     <div class="row g-3 mb-4">
-        <div class="col-sm-6 col-xl-4">
+        <div class="col-sm-6 col-xl-3">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-secondary small fw-medium">Taxi App Users</div>
+                        <div class="fs-2 fw-bold text-success mt-1">{{ total_app_users }}</div>
+                        <div class="small text-success mt-1"><i class="bi bi-person-check-fill me-1"></i>Customers & Riders</div>
+                    </div>
+                    <div class="stat-icon bg-success bg-opacity-10 text-success">
+                        <i class="bi bi-people-fill"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
             <div class="stat-card">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
@@ -163,13 +177,13 @@
                 </div>
             </div>
         </div>
-        <div class="col-sm-6 col-xl-4">
+        <div class="col-sm-6 col-xl-3">
             <div class="stat-card">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <div class="text-secondary small fw-medium">Auth Users</div>
                         <div class="fs-2 fw-bold text-info mt-1">{{ total_system_users }}</div>
-                        <div class="small text-info mt-1"><i class="bi bi-people-fill me-1"></i>Django user table</div>
+                        <div class="small text-info mt-1"><i class="bi bi-people me-1"></i>Django user table</div>
                     </div>
                     <div class="stat-icon bg-info bg-opacity-10 text-info">
                         <i class="bi bi-person-lines-fill"></i>
@@ -177,19 +191,73 @@
                 </div>
             </div>
         </div>
-        <div class="col-sm-6 col-xl-4">
+        <div class="col-sm-6 col-xl-3">
             <div class="stat-card">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <div class="text-secondary small fw-medium">Staff Members</div>
-                        <div class="fs-2 fw-bold text-success mt-1">{{ staff_count }}</div>
-                        <div class="small text-success mt-1"><i class="bi bi-shield-lock me-1"></i>Privileged access</div>
+                        <div class="fs-2 fw-bold text-primary mt-1">{{ staff_count }}</div>
+                        <div class="small text-primary mt-1"><i class="bi bi-shield-lock me-1"></i>Privileged access</div>
                     </div>
-                    <div class="stat-icon bg-success bg-opacity-10 text-success">
+                    <div class="stat-icon bg-primary bg-opacity-10 text-primary">
                         <i class="bi bi-person-check-fill"></i>
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Registered App Users (Customers/Passengers) Table -->
+    <div class="card-custom p-4 mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h5 class="fw-bold mb-0 text-white">Registered App Users (Customers / Passengers)</h5>
+                <p class="text-secondary small mb-0">Records in taxi_users table with name, email, mobile, password</p>
+            </div>
+            <a href="/admin/core/user/" target="_blank" class="btn btn-outline-success btn-sm">
+                Open in Django DB <i class="bi bi-box-arrow-up-right ms-1"></i>
+            </a>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-dark table-hover mb-0" style="--bs-table-bg: transparent;">
+                <thead>
+                    <tr class="text-secondary small border-bottom border-secondary border-opacity-25">
+                        <th>Name</th>
+                        <th>Email Address</th>
+                        <th>Mobile Number</th>
+                        <th>Password Hash</th>
+                        <th>Registered Date</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in app_users_list %}
+                        <tr class="align-middle border-bottom border-secondary border-opacity-25">
+                            <td class="fw-semibold text-white">
+                                <i class="bi bi-person-circle text-success me-1.5"></i> {{ u.name }}
+                            </td>
+                            <td class="text-secondary small">{{ u.email }}</td>
+                            <td class="text-secondary small"><i class="bi bi-telephone-fill me-1 text-info"></i>{{ u.mobile }}</td>
+                            <td><code class="text-warning small" style="font-size: 0.75rem;">{{ u.password|truncatechars:20 }}</code></td>
+                            <td class="text-secondary small">{{ u.created_at|date:"M d, Y" }}</td>
+                            <td>
+                                {% if u.is_active %}
+                                    <span class="badge bg-success bg-opacity-15 text-success border border-success border-opacity-25 px-2 py-1">Active</span>
+                                {% else %}
+                                    <span class="badge bg-danger bg-opacity-15 text-danger border border-danger border-opacity-25 px-2 py-1">Disabled</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-secondary">
+                                No app users registered yet in taxi_users table.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
 

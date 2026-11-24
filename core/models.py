@@ -1,4 +1,38 @@
 from django.db import models
+from django.contrib.auth.hashers import make_password, check_password
+
+
+class User(models.Model):
+    """
+    User model representing registered taxi passengers / customers.
+    Fields: name, email, mobile, password.
+    """
+    name = models.CharField(max_length=150)
+    email = models.EmailField(unique=True)
+    mobile = models.CharField(max_length=15, unique=True)
+    password = models.CharField(max_length=255)  # Hashed password
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'taxi_users'
+        verbose_name = 'User'
+        verbose_name_plural = 'Users'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.name} ({self.email})"
+
+    def set_password(self, raw_password):
+        self.password = make_password(raw_password)
+
+    def check_password(self, raw_password):
+        return check_password(raw_password, self.password)
+
+
+# Backward-compatible alias
+CustomerUser = User
 
 
 class CustomAdmin(models.Model):

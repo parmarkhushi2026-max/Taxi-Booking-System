@@ -18,7 +18,7 @@ from .forms import (
     VerifyOTPForm,
     AdminResetPasswordForm,
 )
-from .models import CustomAdmin, Driver, Vehicle, Booking
+from .models import User as AppUser, CustomAdmin, Driver, Vehicle, Booking
 
 
 def send_otp_via_console_email(target_email, otp):
@@ -522,9 +522,11 @@ def admin_users_view(request):
     context['module_icon'] = 'bi-people-fill'
     context['module_description'] = 'Overview of customer rider accounts, administrative staff credentials, contact details, and role permissions.'
     context['total_custom_admins'] = CustomAdmin.objects.count()
+    context['total_app_users'] = AppUser.objects.count()
     context['total_system_users'] = User.objects.count()
     context['staff_count'] = User.objects.filter(is_staff=True).count()
     context['custom_admins_list'] = CustomAdmin.objects.all()[:10]
+    context['app_users_list'] = AppUser.objects.all()[:10]
     context['system_users_list'] = User.objects.all()[:10]
 
     return render(request, 'core/admin_users.html', context)

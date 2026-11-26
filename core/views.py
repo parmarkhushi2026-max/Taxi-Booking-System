@@ -613,6 +613,42 @@ def admin_user_create_view(request):
 
 
 @login_required(login_url='admin_login')
+def admin_user_detail_view(request, user_id):
+    """
+    Detailed profile view for an individual App User / Passenger.
+    Displays comprehensive user metadata, account status, contact info,
+    and associated ride booking history.
+    """
+    if not (request.user.is_staff or request.user.is_superuser):
+        logout(request)
+        messages.error(request, 'Session terminated: Administrator privileges required.')
+        return redirect('admin_login')
+
+    target_user = get_object_or_404(AppUser, pk=user_id)
+
+    # Fetch associated ride bookings matching customer phone or name
+    user_bookings = Booking.objects.filter(
+        Q(customer_phone=target_user.mobile) | Q(customer_name__iexact=target_user.name)
+    ).order_by('-created_at')
+
+    total_rides = user_bookings.count()
+    completed_rides = user_bookings.filter(status='completed').count()
+    cancelled_rides = user_bookings.filter(status='cancelled').count()
+    total_spent = user_bookings.filter(status='completed').aggregate(Sum('fare'))['fare__sum'] or 0
+
+    context = get_admin_context(request)
+    context['active_nav'] = 'users'
+    context['target_user'] = target_user
+    context['user_bookings'] = user_bookings
+    context['total_rides'] = total_rides
+    context['completed_rides'] = completed_rides
+    context['cancelled_rides'] = cancelled_rides
+    context['total_spent'] = total_spent
+
+    return render(request, 'core/admin_user_detail.html', context)
+
+
+@login_required(login_url='admin_login')
 def admin_user_edit_view(request, user_id):
     """
     Edit an existing App User (Name, Email, Mobile, Active Status, Optional Password change).

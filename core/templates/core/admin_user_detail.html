@@ -1,0 +1,428 @@
+{% extends 'core/base.html' %}
+
+{% block title %}User Profile &bull; {{ target_user.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .admin-navbar {
+        background: rgba(15, 23, 42, 0.95);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.4);
+    }
+
+    .nav-link-admin {
+        color: #94a3b8;
+        font-weight: 500;
+        font-size: 0.92rem;
+        padding: 0.5rem 0.85rem !important;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .nav-link-admin:hover {
+        color: #f8fafc;
+        background: rgba(255, 255, 255, 0.06);
+    }
+
+    .nav-link-admin.active {
+        color: #f59e0b;
+        background: rgba(245, 158, 11, 0.12);
+        font-weight: 600;
+    }
+
+    .profile-hero-card {
+        background: linear-gradient(135deg, rgba(30, 41, 59, 0.85) 0%, rgba(15, 23, 42, 0.95) 100%);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .profile-avatar-circle-lg {
+        width: 80px;
+        height: 80px;
+        border-radius: 20px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 2.2rem;
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        color: #ffffff;
+        box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4);
+    }
+
+    .stat-card-detail {
+        background: rgba(30, 41, 59, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 16px;
+        padding: 1.25rem;
+    }
+
+    .info-card {
+        background: rgba(30, 41, 59, 0.7);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 16px;
+    }
+
+    .info-label {
+        font-size: 0.82rem;
+        color: #94a3b8;
+        font-weight: 500;
+    }
+
+    .info-value {
+        font-size: 1rem;
+        color: #f8fafc;
+        font-weight: 600;
+    }
+
+    .modal-content-custom {
+        background: #111827;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 16px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+{% include 'core/includes/admin_navbar.html' %}
+
+<div class="container-fluid px-4 py-4">
+    <!-- Messages Notification -->
+    {% if messages %}
+        <div class="mb-4">
+            {% for message in messages %}
+                <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show rounded-3 shadow-sm d-flex align-items-center gap-2" role="alert">
+                    <i class="bi bi-info-circle-fill"></i>
+                    <div>{{ message }}</div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Top Navigation & Action Buttons -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <a href="{% url 'admin_dashboard' %}" class="text-secondary text-decoration-none small">
+                    <i class="bi bi-speedometer2 me-1"></i> Dashboard
+                </a>
+                <span class="text-secondary small">/</span>
+                <a href="{% url 'admin_users' %}" class="text-secondary text-decoration-none small">
+                    Users & Customers
+                </a>
+                <span class="text-secondary small">/</span>
+                <span class="text-info small fw-semibold">User Profile</span>
+            </div>
+            <h2 class="fw-bold text-white mb-0 d-flex align-items-center gap-2">
+                <i class="bi bi-person-vcard-fill text-info"></i> Detailed User Profile
+            </h2>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a href="{% url 'admin_users' %}" class="btn btn-outline-secondary btn-sm px-3 d-inline-flex align-items-center">
+                <i class="bi bi-arrow-left me-1.5"></i> Back to Users List
+            </a>
+            <a href="{% url 'admin_user_edit' target_user.id %}" class="btn btn-outline-warning btn-sm px-3 d-inline-flex align-items-center">
+                <i class="bi bi-pencil-square me-1.5"></i> Edit Profile
+            </a>
+            <a href="{% url 'admin_user_toggle_status' target_user.id %}" class="btn btn-outline-light btn-sm px-3 d-inline-flex align-items-center">
+                {% if target_user.is_active %}
+                    <i class="bi bi-person-x text-danger me-1.5"></i> Disable User
+                {% else %}
+                    <i class="bi bi-person-check text-success me-1.5"></i> Enable User
+                {% endif %}
+            </a>
+            <button type="button" class="btn btn-outline-danger btn-sm px-3 d-inline-flex align-items-center" data-bs-toggle="modal" data-bs-target="#deleteProfileUserModal">
+                <i class="bi bi-trash3-fill me-1.5"></i> Delete User
+            </button>
+        </div>
+    </div>
+
+    <!-- User Profile Hero Banner -->
+    <div class="profile-hero-card p-4 p-md-5 mb-4 shadow">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-4">
+            <div class="d-flex align-items-center gap-4 flex-wrap">
+                <div class="profile-avatar-circle-lg">
+                    {{ target_user.name|slice:":1"|upper }}
+                </div>
+                <div>
+                    <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                        <h2 class="fw-bold text-white mb-0">{{ target_user.name }}</h2>
+                        {% if target_user.is_active %}
+                            <span class="badge bg-success bg-opacity-15 text-success border border-success border-opacity-25 px-3 py-1.5 rounded-pill fs-6">
+                                <i class="bi bi-check-circle-fill me-1"></i> Active Passenger
+                            </span>
+                        {% else %}
+                            <span class="badge bg-danger bg-opacity-15 text-danger border border-danger border-opacity-25 px-3 py-1.5 rounded-pill fs-6">
+                                <i class="bi bi-slash-circle-fill me-1"></i> Account Disabled
+                            </span>
+                        {% endif %}
+                    </div>
+                    <div class="d-flex flex-wrap gap-3 text-secondary small">
+                        <span><i class="bi bi-hash text-warning"></i> User ID: <strong>#USR-{{ target_user.id|stringformat:"04d" }}</strong></span>
+                        <span>&bull;</span>
+                        <span><i class="bi bi-calendar3 text-info"></i> Member since: <strong>{{ target_user.created_at|date:"F d, Y" }}</strong></span>
+                        <span>&bull;</span>
+                        <span><i class="bi bi-clock-history text-secondary"></i> Last updated: <strong>{{ target_user.updated_at|date:"M d, Y, h:i A" }}</strong></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Contact Badges -->
+            <div class="d-flex flex-column gap-2">
+                <a href="mailto:{{ target_user.email }}" class="btn btn-dark border border-secondary text-light btn-sm text-start px-3 py-2">
+                    <i class="bi bi-envelope-fill text-warning me-2"></i> {{ target_user.email }}
+                </a>
+                <a href="tel:{{ target_user.mobile }}" class="btn btn-dark border border-secondary text-light btn-sm text-start px-3 py-2">
+                    <i class="bi bi-telephone-fill text-info me-2"></i> {{ target_user.mobile }}
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Overview Stat Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-xl-3">
+            <div class="stat-card-detail">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="info-label">Total Rides Booked</div>
+                        <div class="fs-2 fw-bold text-white mt-1">{{ total_rides }}</div>
+                        <div class="small text-info mt-1"><i class="bi bi-taxi-front-fill me-1"></i>Trip Requests</div>
+                    </div>
+                    <div class="stat-icon bg-info bg-opacity-10 text-info">
+                        <i class="bi bi-pin-map-fill"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="stat-card-detail">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="info-label">Completed Rides</div>
+                        <div class="fs-2 fw-bold text-success mt-1">{{ completed_rides }}</div>
+                        <div class="small text-success mt-1"><i class="bi bi-check-circle-fill me-1"></i>Finished Trips</div>
+                    </div>
+                    <div class="stat-icon bg-success bg-opacity-10 text-success">
+                        <i class="bi bi-geo-alt-fill"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="stat-card-detail">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="info-label">Cancelled / Dropped</div>
+                        <div class="fs-2 fw-bold text-danger mt-1">{{ cancelled_rides }}</div>
+                        <div class="small text-danger mt-1"><i class="bi bi-x-circle-fill me-1"></i>Cancelled</div>
+                    </div>
+                    <div class="stat-icon bg-danger bg-opacity-10 text-danger">
+                        <i class="bi bi-dash-circle-dotted"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="stat-card-detail">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="info-label">Total Amount Spent</div>
+                        <div class="fs-2 fw-bold text-warning mt-1">&#8377;{{ total_spent|floatformat:2 }}</div>
+                        <div class="small text-warning mt-1"><i class="bi bi-wallet2 me-1"></i>Revenue Generated</div>
+                    </div>
+                    <div class="stat-icon bg-warning bg-opacity-10 text-warning">
+                        <i class="bi bi-currency-rupee"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Information & Ride History Grid -->
+    <div class="row g-4">
+        <!-- User Metadata Card -->
+        <div class="col-lg-4">
+            <div class="info-card p-4 h-100">
+                <h5 class="fw-bold text-white mb-3 d-flex align-items-center gap-2">
+                    <i class="bi bi-person-fill text-warning"></i> Personal Information
+                </h5>
+
+                <div class="d-flex flex-column gap-3">
+                    <div class="p-3 rounded-3 bg-dark border border-secondary border-opacity-25">
+                        <div class="info-label mb-1">Full Name</div>
+                        <div class="info-value">{{ target_user.name }}</div>
+                    </div>
+
+                    <div class="p-3 rounded-3 bg-dark border border-secondary border-opacity-25">
+                        <div class="info-label mb-1">Email Address</div>
+                        <div class="info-value d-flex align-items-center gap-2">
+                            <i class="bi bi-envelope-at text-warning"></i> {{ target_user.email }}
+                        </div>
+                    </div>
+
+                    <div class="p-3 rounded-3 bg-dark border border-secondary border-opacity-25">
+                        <div class="info-label mb-1">Mobile Contact</div>
+                        <div class="info-value d-flex align-items-center gap-2">
+                            <i class="bi bi-telephone text-info"></i> {{ target_user.mobile }}
+                        </div>
+                    </div>
+
+                    <div class="p-3 rounded-3 bg-dark border border-secondary border-opacity-25">
+                        <div class="info-label mb-1">Password Security</div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-success bg-opacity-15 text-success border border-success border-opacity-25 px-2 py-1">
+                                <i class="bi bi-shield-lock-fill me-1"></i> PBKDF2 Encrypted
+                            </span>
+                        </div>
+                        <div class="text-secondary small mt-1" style="font-size: 0.75rem;">Password hashed using Django PBKDF2 SHA-256 algorithm.</div>
+                    </div>
+
+                    <div class="p-3 rounded-3 bg-dark border border-secondary border-opacity-25">
+                        <div class="info-label mb-1">Database Table</div>
+                        <div class="text-light small font-monospace">taxi_users (PK: {{ target_user.id }})</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ride Bookings History with Bootstrap Table -->
+        <div class="col-lg-8">
+            <div class="info-card p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                    <div>
+                        <h5 class="fw-bold text-white mb-0 d-flex align-items-center gap-2">
+                            <i class="bi bi-clock-history text-info"></i> Ride History & Associated Bookings
+                        </h5>
+                        <p class="text-secondary small mb-0">Bookings placed under this user's phone or customer name</p>
+                    </div>
+                    <span class="badge bg-dark border border-secondary text-light">
+                        {{ total_rides }} Trip{{ total_rides|pluralize }}
+                    </span>
+                </div>
+
+                <div class="table-responsive">
+                    <!-- Bootstrap Table for user ride history -->
+                    <table class="table table-dark table-hover table-striped align-middle border-secondary border-opacity-25 mb-0">
+                        <thead>
+                            <tr class="text-secondary small border-bottom border-secondary border-opacity-25">
+                                <th>Booking ID</th>
+                                <th>Route (Pickup &rarr; Drop)</th>
+                                <th>Vehicle</th>
+                                <th>Fare</th>
+                                <th>Status</th>
+                                <th>Date & Time</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for b in user_bookings %}
+                                <tr class="border-bottom border-secondary border-opacity-25">
+                                    <td>
+                                        <code class="text-warning fw-bold small">{{ b.booking_id }}</code>
+                                    </td>
+                                    <td>
+                                        <div class="small text-white fw-semibold">
+                                            <i class="bi bi-circle-fill text-success me-1" style="font-size: 0.5rem;"></i> {{ b.pickup_location }}
+                                        </div>
+                                        <div class="small text-secondary">
+                                            <i class="bi bi-geo-alt-fill text-danger me-1" style="font-size: 0.7rem;"></i> {{ b.drop_location }}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary bg-opacity-25 text-light border border-secondary border-opacity-25 px-2 py-1">
+                                            {{ b.vehicle_type }}
+                                        </span>
+                                    </td>
+                                    <td class="fw-bold text-warning">
+                                        &#8377;{{ b.fare|floatformat:2 }}
+                                    </td>
+                                    <td>
+                                        {% if b.status == 'completed' %}
+                                            <span class="badge bg-success bg-opacity-15 text-success border border-success border-opacity-25 px-2 py-1 rounded-pill">
+                                                Completed
+                                            </span>
+                                        {% elif b.status == 'ongoing' %}
+                                            <span class="badge bg-info bg-opacity-15 text-info border border-info border-opacity-25 px-2 py-1 rounded-pill">
+                                                Ongoing
+                                            </span>
+                                        {% elif b.status == 'confirmed' %}
+                                            <span class="badge bg-primary bg-opacity-15 text-primary border border-primary border-opacity-25 px-2 py-1 rounded-pill">
+                                                Confirmed
+                                            </span>
+                                        {% elif b.status == 'cancelled' %}
+                                            <span class="badge bg-danger bg-opacity-15 text-danger border border-danger border-opacity-25 px-2 py-1 rounded-pill">
+                                                Cancelled
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-warning bg-opacity-15 text-warning border border-warning border-opacity-25 px-2 py-1 rounded-pill">
+                                                Pending
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="small text-light">{{ b.created_at|date:"M d, Y" }}</div>
+                                        <div class="text-secondary small" style="font-size: 0.75rem;">{{ b.created_at|time:"h:i A" }}</div>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center py-4 text-secondary">
+                                        <i class="bi bi-geo-alt fs-3 d-block mb-2 text-secondary opacity-50"></i>
+                                        No rides booked by this customer yet.
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Delete User from Profile Page -->
+<div class="modal fade" id="deleteProfileUserModal" tabindex="-1" aria-labelledby="deleteProfileModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered text-start">
+        <div class="modal-content modal-content-custom">
+            <div class="modal-header border-bottom border-secondary border-opacity-25">
+                <h5 class="modal-title fw-bold text-danger d-flex align-items-center gap-2" id="deleteProfileModalLabel">
+                    <i class="bi bi-exclamation-triangle-fill"></i> Confirm User Deletion
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body py-4">
+                <p class="text-light mb-2">
+                    Are you sure you want to permanently delete user <strong>{{ target_user.name }}</strong>?
+                </p>
+                <div class="p-3 rounded-3 bg-dark border border-secondary border-opacity-25 mb-3">
+                    <div class="fw-bold text-white fs-6">{{ target_user.name }}</div>
+                    <div class="text-secondary small"><i class="bi bi-envelope me-1"></i> {{ target_user.email }}</div>
+                    <div class="text-secondary small"><i class="bi bi-telephone me-1"></i> {{ target_user.mobile }}</div>
+                </div>
+                <div class="alert alert-danger bg-danger bg-opacity-10 border border-danger border-opacity-25 rounded-3 py-2 px-3 small text-danger mb-0">
+                    <i class="bi bi-info-circle me-1"></i> This action is permanent and cannot be undone. All user data will be removed.
+                </div>
+            </div>
+            <div class="modal-footer border-top border-secondary border-opacity-25">
+                <button type="button" class="btn btn-outline-secondary btn-sm px-3" data-bs-dismiss="modal">
+                    Cancel
+                </button>
+                <form method="POST" action="{% url 'admin_user_delete' target_user.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger btn-sm px-3 fw-semibold">
+                        <i class="bi bi-trash3-fill me-1"></i> Yes, Delete User
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

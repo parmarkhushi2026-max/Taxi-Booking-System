@@ -504,3 +504,76 @@ class AdminLoginTests(TestCase):
         response = self.client.get(reverse('admin_users') + '?q=9333344445')
         self.assertContains(response, 'Geeta Patel')
         self.assertNotContains(response, 'Mohit Sharma')
+
+    def test_admin_user_detailed_profile_view(self):
+        """Admin can view detailed profile of an individual user including metadata and ride history."""
+        user = AppUser.objects.create(
+            name='Divya Singhania',
+            email='divya.s@taxiapp.com',
+            mobile='9887766554',
+            password=make_password('DivyaPass123!'),
+        )
+        # Create an associated booking
+        Booking.objects.create(
+            booking_id='TX-9901',
+            customer_name='Divya Singhania',
+            customer_phone='9887766554',
+            pickup_location='Airport Terminal 2',
+            drop_location='Tech Park Gate 1',
+            vehicle_type='Sedan',
+            fare=650.00,
+            status='completed',
+        )
+
+        self.client.login(username='superadmin', password='SecretPassword123')
+        detail_url = reverse('admin_user_detail', args=[user.id])
+        response = self.client.get(detail_url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Divya Singhania')
+        self.assertContains(response, 'divya.s@taxiapp.com')
+        self.assertContains(response, '9887766554')
+        self.assertContains(response, 'TX-9901')
+        self.assertContains(response, 'Airport Terminal 2')
+        self.assertContains(response, 'Tech Park Gate 1')
+        self.assertContains(response, 'Detailed User Profile')
+
+    def test_user_search_by_name_and_by_email(self):
+        """Implement user search by name or email address."""
+        u1 = AppUser.objects.create(name='Ananya Roy', email='ananya.roy@taxiapp.com', mobile='9111000001', password='pass')
+        u2 = AppUser.objects.create(name='Suresh Nair', email='suresh.nair@taxiapp.com', mobile='9111000002', password='pass')
+
+        self.client.login(username='superadmin', password='SecretPassword123')
+
+        # 1. Search by Name
+        resp_name = self.client.get(reverse('admin_users') + '?q=Ananya')
+        self.assertContains(resp_name, 'Ananya Roy')
+        self.assertNotContains(resp_name, 'Suresh Nair')
+
+        # 2. Search by Email
+        resp_email = self.client.get(reverse('admin_users') + '?q=suresh.nair@taxiapp.com')
+        self.assertContains(resp_email, 'Suresh Nair')
+        self.assertNotContains(resp_email, 'Ananya Roy')
+
+    def test_bootstrap_table_user_list_display(self):
+        """User list displays via Bootstrap table styling with action options."""
+        user = AppUser.objects.create(
+            name='Kunal Desai',
+            email='kunal@taxiapp.com',
+            mobile='9222333444',
+            password=make_password('Pass123'),
+        )
+        self.client.login(username='superadmin', password='SecretPassword123')
+        response = self.client.get(reverse('admin_users'))
+
+        self.assertEqual(response.status_code, 200)
+        # Check Bootstrap table elements
+        self.assertContains(response, 'table-dark')
+        self.assertContains(response, 'table-hover')
+        self.assertContains(response, 'table-striped')
+        self.assertContains(response, 'table-responsive')
+        # Check action buttons
+        self.assertContains(response, 'View')
+        self.assertContains(response, 'Edit')
+        self.assertContains(response, 'Delete')
+        self.assertContains(response, reverse('admin_user_detail', args=[user.id]))
